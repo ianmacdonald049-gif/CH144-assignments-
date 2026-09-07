@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment 2, CH144 Fall 2026</title>
+    <style>
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            box-sizing: border-box;
+        }
+        
+        input[type="text"], [contenteditable="true"], button, select, input[type="range"] {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .validation-alert {
+            display: none;
+            background-color: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 15px;
+            text-align: center;
+        }
+
+        .max-points-container {
+            display: flex;
+            justify-content: center;
+            margin-top: -15px;
+            margin-bottom: 30px;
+        }
+
+        .max-points-tally {
+            background-color: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-warning {
+            color: #dc2626;
+            background-color: #fef2f2;
+            border: 1px dashed #fca5a5;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 20px auto 10px auto;
+            display: inline-block;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        @media print {
+            @page {
+                margin: 0.5in;
+            }
+            body { 
+                background: white; 
+                color: black; 
+                padding: 0;
+                margin: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            body::before {
+                content: "";
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: 99999;
+                pointer-events: none;
+                opacity: 0.05;
+                background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='250' height='150' viewBox='0 0 250 150'><text x='30' y='100' font-family='Segoe UI, sans-serif' font-size='14' font-weight='bold' fill='%23000000' transform='rotate(-30 30 100)'>CH144 Completed Assignment</text></svg>");
+                background-repeat: repeat;
+            }
+
+            .container { 
+                box-shadow: none; 
+                padding: 0; 
+                max-width: 100%;
+                width: 100%;
+            }
+            .toolbar, .crop-controls, .file-input-wrapper, .btn-download-pdf, .validation-alert, .action-warning { 
+                display: none !important; 
+            }
+            .question-block, .sub-question-block, .summary-table tr, .student-info-block, .summary-section { 
+                page-break-inside: avoid !important; 
+                break-inside: avoid !important;
+            }
+            .max-points-tally { background: none; border: 1px solid #000; color: #000; box-shadow: none; }
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e3a8a;
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+
+        .student-info-block {
+            display: flex;
+            gap: 20px;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 30px;
+        }
+
+        .info-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-group label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #475569;
+        }
+
+        .info-group input {
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .info-group input:focus {
+            border-color: #3b82f6;
+        }
+
+        .question-block {
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .question-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .point-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+            border: 1px solid #bae6fd;
+        }
+
+        .question-text {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .sub-question-block {
+            margin-top: 15px;
+            padding-left: 15px;
+            border-left: 3px solid #cbd5e1;
+            margin-bottom: 15px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 4px;
+            background: #f1f5f9;
+            padding: 6px;
+            border-radius: 6px 6px 0 0;
+            border: 1px solid #cbd5e1;
+            border-bottom: none;
+            flex-wrap: wrap;
+        }
+
+        .toolbar button {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #334155;
+            transition: all 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #e2e8f0;
+            color: #000;
+        }
+
+        .toolbar .symbol-btn {
+            font-family: Cambria, Georgia, serif;
+            font-weight: bold;
+        }
+
+        .answer-box {
+            min-height: 90px;
+            border: 1px solid #cbd5e1;
+            border-radius: 0 0 6px 6px;
+            padding: 12px;
+            background: white;
+            outline: none;
+            font-size: 15px;
+            overflow-y: auto;
+            transition: border-color 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .answer-box:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+
+        .photo-workspace-wrapper {
+            width: 100%;
+            position: relative;
+            background: #0f172a;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px dashed #cbd5e1;
+            padding-top: 50%; /* Adjusted for a wider box layout suitable for multiple subquestions */
+            margin-bottom: 10px;
+        }
+
+        .photo-inner-canvas {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .file-input-wrapper {
+            position: absolute;
+            z-index: 10;
+            text-align: center;
+            color: #94a3b8;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .cropper-stage {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            cursor: move;
+        }
+
+        .cropper-image {
+            position: absolute;
+            transform-origin: center center;
+            max-width: none;
+            max-height: none;
+        }
+
+        .crop-controls {
+            display: none;
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 0 0 8px 8px;
+            color: white;
+            gap: 15px;
+            flex-direction: column;
+            margin-bottom: 25px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .control-row label { width: 80px; }
+        .control-row input[type="range"] { flex: 1; }
+
+        .btn-apply-crop {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            align-self: flex-end;
+        }
+
+        .btn-apply-crop:hover { background: #059669; }
+
+        .summary-section {
+            margin-top: 20px;
+            padding-top: 30px;
+            border-top: 3px solid #1e3a8a;
+        }
+
+        .summary-section h2 {
+            color: #1e3a8a;
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 14px;
+        }
+
+        .summary-table th, .summary-table td {
+            border: 1px solid #cbd5e1;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .summary-table th {
+            background: #f8fafc;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .summary-table td p {
+            margin: 0;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .summary-preview-img {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            display: block;
+        }
+
+        .btn-download-pdf {
+            background-color: #1e3a8a; 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 6px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-download-pdf:hover {
+            background-color: #2563eb;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="container">
+        <div id="validationBanner" class="validation-alert">
+            ⚠️ Attention: Please fill in your Student Name and answer all fields before converting to a PDF document.
+        </div>
+
+        <h1>Assignment 2, CH144 Fall 2026</h1>
+        
+        <div class="max-points-container">
+            <div class="max-points-tally">
+                📊 Maximum Points Available: 68 pts
+            </div>
+        </div>
+
+        <div class="student-info-block">
+            <div class="info-group">
+                <label for="studentName">Student Full Name</label>
+                <input type="text" id="studentName" placeholder="Enter full name..." autocomplete="off">
+            </div>
+        </div>
+
+        <form id="assignmentForm" onsubmit="return false;">
+            <div id="questionsContainer">
+                
+                <!-- Q1 -->
+                <div class="question-block" id="block-1">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">Question 1: Calculate the number of grams in 701.6 kg</span>
+                    </div>
+                    <div class="toolbar" id="tb-1"></div>
+                    <div id="ans-1" class="answer-box" contenteditable="true" placeholder="Type final values or work here..."></div>
+                    <div id="cropperContainer-1"></div>
+                </div>
+
+                <!-- Q2 -->
+                <div class="question-block" id="block-2">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">Question 2: Calculate the length of time, in seconds, of 150.0 ns</span>
+                    </div>
+                    <div class="toolbar" id="tb-2"></div>
+                    <div id="ans-2" class="answer-box" contenteditable="true" placeholder="Type final values or work here..."></div>
+                    <div id="cropperContainer-2"></div>
+                </div>
+
+                <!-- Q3 -->
+                <div class="question-block" id="block-3">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">Question 3: Determine: The mass of a 2100 Mg object in kg.</span>
+                    </div>
+                    <div class="toolbar" id="tb-3"></div>
+                    <div id="ans-3" class="answer-box" contenteditable="true" placeholder="Type final values or work here..."></div>
+                    <div id="cropperContainer-3"></div>
+                </div>
+
+                <!-- Q4 -->
+                <div class="question-block" id="block-4">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">Question 4: Evaluate the following: The wavelength of 305 nm light in mm</span>
+                    </div>
+                    <div class="toolbar" id="tb-4"></div>
+                    <div id="ans-4" class="answer-box" contenteditable="true" placeholder="Type final values or work here..."></div>
+                    <div id="cropperContainer-4"></div>
+                </div>
+
+                <!-- Q5 -->
+                <div class="question-block" id="block-5">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">Question 5: The density of water is 1.001 g/cm³: Determine the value of the density in kg/m³</span>
+                    </div>
+                    <div class="toolbar" id="tb-5"></div>
+                    <div id="ans-5" class="answer-box" contenteditable="true" placeholder="Type final values or work here..."></div>
+                    <div id="cropperContainer-5"></div>
+                </div>
+
+                <!-- Q6 -->
+                <div class="question-block" id="block-6">
+                    <div class="question-header">
+                        <span class="point-badge">18 pts</span>
+                        <span class="question-text">Question 6: Evaluate the following problems by hand (without using a calculator). Put your answer in correct scientific notation.</span>
+                    </div>
+                    
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> 6.52x10³ + 8.99x10²</div>
+                        <div class="toolbar" id="tb-6A"></div>
+                        <div id="ans-6A" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> 3.33x10⁻⁴ – 1.11x10⁻⁵</div>
+                        <div class="toolbar" id="tb-6B"></div>
+                        <div id="ans-6B" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> 7.88x10⁻⁶ + 5.12x10⁻⁵</div>
+                        <div class="toolbar" id="tb-6C"></div>
+                        <div id="ans-6C" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> 5.22x10²¹ + 9.01x10²⁰</div>
+                        <div class="toolbar" id="tb-6D"></div>
+                        <div id="ans-6D" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>E.</strong> 1.02x10⁻³⁶ – 4.91x10⁻³⁴</div>
+                        <div class="toolbar" id="tb-6E"></div>
+                        <div id="ans-6E" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>G.</strong> 7.32x10¹⁸ – 1.99x10¹⁸</div>
+                        <div class="toolbar" id="tb-6G"></div>
+                        <div id="ans-6G" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div id="cropperContainer-6"></div>
+                </div>
+
+                <!-- Q7 -->
+                <div class="question-block" id="block-7">
+                    <div class="question-header">
+                        <span class="point-badge">18 pts</span>
+                        <span class="question-text">Question 7: Evaluate the following problems by hand (without using a calculator). Put your answer in correct scientific notation.</span>
+                    </div>
+                    
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> 8.99x10² / 9.52x10³</div>
+                        <div class="toolbar" id="tb-7A"></div>
+                        <div id="ans-7A" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> (4.77x10⁻⁶)(2.10x10⁵)</div>
+                        <div class="toolbar" id="tb-7B"></div>
+                        <div id="ans-7B" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> 7.88x10⁻⁶ / 5.12x10⁻⁵</div>
+                        <div class="toolbar" id="tb-7C"></div>
+                        <div id="ans-7C" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> (9.31x10³⁵)(8.01x10⁻²⁹)</div>
+                        <div class="toolbar" id="tb-7D"></div>
+                        <div id="ans-7D" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>E.</strong> 1.02x10⁻³⁶ / 1.78x10⁻³⁴</div>
+                        <div class="toolbar" id="tb-7E"></div>
+                        <div id="ans-7E" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>G.</strong> (7.32x10¹⁸)(9.99x10¹⁹)</div>
+                        <div class="toolbar" id="tb-7G"></div>
+                        <div id="ans-7G" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div id="cropperContainer-7"></div>
+                </div>
+
+                <!-- Q8 -->
+                <div class="question-block" id="block-8">
+                    <div class="question-header">
+                        <span class="point-badge">6 pts</span>
+                        <span class="question-text">Question 8: Evaluate the following problems using your calculator. Put your answer into correct scientific notation.</span>
+                    </div>
+                    
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> 3.26x10⁶ + 9.88x10⁵</div>
+                        <div class="toolbar" id="tb-8A"></div>
+                        <div id="ans-8A" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> 5.91x10⁻¹¹ / 1.11x10⁻⁵</div>
+                        <div class="toolbar" id="tb-8B"></div>
+                        <div id="ans-8B" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> (7.88x10⁻⁶)(8.21x10⁻⁸)</div>
+                        <div class="toolbar" id="tb-8C"></div>
+                        <div id="ans-8C" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> 9.22x10²¹ - 9.01x10²⁰</div>
+                        <div class="toolbar" id="tb-8D"></div>
+                        <div id="ans-8D" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>E.</strong> (1.02x10⁻³⁶)(4.91x10¹⁰)</div>
+                        <div class="toolbar" id="tb-8E"></div>
+                        <div id="ans-8E" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;">"><strong>G.</strong> 8.32x10¹⁸ / 4.99x10¹⁸</div>
+                        <div class="toolbar" id="tb-8G"></div>
+                        <div id="ans-8G" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div id="cropperContainer-8"></div>
+                </div>
+
+                <!-- Q9_1 -->
+                <div class="question-block" id="block-9_1">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">Question 9 (Part 1): Convert 5.0e5 gallons to liters (3.79 l = 1 gal).</span>
+                    </div>
+                    <div class="toolbar" id="tb-9_1"></div>
+                    <div id="ans-9_1" class="answer-box" contenteditable="true" placeholder="Type final values or work here..."></div>
+                    <div id="cropperContainer-9_1"></div>
+                </div>
+
+                <!-- Q9_2 -->
+                <div class="question-block" id="block-9_2">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">Question 9 (Part 2): Conversion of 2.4e4 miles to meters (1.61 km = 1 mile)</span>
+                    </div>
+                    <div class="toolbar" id="tb-9_2"></div>
+                    <div id="ans-9_2" class="answer-box" contenteditable="true" placeholder="Type final values or work here..."></div>
+                    <div id="cropperContainer-9_2"></div>
+                </div>
+
+                <!-- Q10 -->
+                <div class="question-block" id="block-10">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">Question 10: Determine the area of a sphere with a radius of 1.6 ft (A=4πr²) and convert to cm² (1 ft = 0.305 m).</span>
+                    </div>
+                    <div class="toolbar" id="tb-10"></div>
+                    <div id="ans-10" class="answer-box" contenteditable="true" placeholder="Type final values or work here..."></div>
+                    <div id="cropperContainer-10"></div>
+                </div>
+
+                <!-- Q11 -->
+                <div class="question-block" id="block-11">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">Question 11: Calculate and show your work for the following: Conversion of the area of a circle (A=πr²) of radius r = 3.11x10³ ft to acres (3.28 ft = 1 m, 4047 m² = 1 acre)</span>
+                    </div>
+                    <div class="toolbar" id="tb-11"></div>
+                    <div id="ans-11" class="answer-box" contenteditable="true" placeholder="Type final values or work here..."></div>
+                    <div id="cropperContainer-11"></div>
+                </div>
+
+                <!-- Q12_1 -->
+                <div class="question-block" id="block-12_1">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">Question 12 (Part 1): Due to leaks in a water distribution system the losses are calculated to be: 3000 gal of water in 24 hours. Calculate the rate of loss to the system in liters/min. (1 l = 0.264 gal).</span>
+                    </div>
+                    <div class="toolbar" id="tb-12_1"></div>
+                    <div id="ans-12_1" class="answer-box" contenteditable="true" placeholder="Type final values or work here..."></div>
+                    <div id="cropperContainer-12_1"></div>
+                </div>
+
+                <!-- Q12_2 -->
+                <div class="question-block" id="block-12_2">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">Question 12 (Part 2): A cooling system removes 3.1x10⁶ BTU/hr (British Thermal Unit per hour) of heat energy from an industrial machine. Determine the rate of heat removal in J/day and calculate the heat removed, in J, over a period of 1 week (1055.1 J = 1 BTU).</span>
+                    </div>
+                    <div class="toolbar" id="tb-12_2"></div>
+                    <div id="ans-12_2" class="answer-box" contenteditable="true" placeholder="Type final values or work here..."></div>
+                    <div id="cropperContainer-12_2"></div>
+                </div>
+
+                <!-- Q13 -->
+                <div class="question-block" id="block-13">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">Question 13: Do the following conversion: 3600 m/s to km/hr</span>
+                    </div>
+                    <div class="toolbar" id="tb-13"></div>
+                    <div id="ans-13" class="answer-box" contenteditable="true" placeholder="Type final values or work here..."></div>
+                    <div id="cropperContainer-13"></div>
+                </div>
+
+                <!-- Q14 -->
+                <div class="question-block" id="block-14">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">Question 14: A Ti atom has an atomic radius of 130 pm.</span>
+                    </div>
+                    
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> Calculate the volume of a Ti atom in liters. (V=4/3 πr³)</div>
+                        <div class="toolbar" id="tb-14A"></div>
+                        <div id="ans-14A" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-14A"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> Calculate the surface area of a Ti atom in m². (A=4πr²)</div>
+                        <div class="toolbar" id="tb-14B"></div>
+                        <div id="ans-14B" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-14B"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> Calculate the number of Ti atoms that can be placed side-by-side on a 1 mm x 1 mm surface. Pack them side by side at right angles to one another.</div>
+                        <div class="toolbar" id="tb-14C"></div>
+                        <div id="ans-14C" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-14C"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> Determine the total volume of a box occupied by the atoms (including the voids between them) above the 1 mm x 1 mm surface.</div>
+                        <div class="toolbar" id="tb-14D"></div>
+                        <div id="ans-14D" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-14D"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>E.</strong> Calculate the actual volume occupied by the atoms.</div>
+                        <div class="toolbar" id="tb-14E"></div>
+                        <div id="ans-14E" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-14E"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>F.</strong> Calculate the volume of the voids between the atoms.</div>
+                        <div class="toolbar" id="tb-14F"></div>
+                        <div id="ans-14F" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-14F"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>G.</strong> Determine the area of the 1 mm x 1 mm surface that is shadowed by the atoms above it.</div>
+                        <div class="toolbar" id="tb-14G"></div>
+                        <div id="ans-14G" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-14G"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>H.</strong> Determine the area of the un-shadowed portion of the 1 mm x 1 mm square.</div>
+                        <div class="toolbar" id="tb-14H"></div>
+                        <div id="ans-14H" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-14H"></div>
+                    </div>
+                </div>
+
+                <!-- Q15 -->
+                <div class="question-block" id="block-15">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">Question 15: A spherical bubble’s surface area increases, as the radius of the bubble increases according to the following formula: A_r = 8πrR_r, where Ar is the rate of change of the area of the bubble (mm²/s) and Rr is the rate of the change of the length of the radius (mm/s). Initially the bubble has a radius of 1.02x10⁻³ mm.</span>
+                    </div>
+                    
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> Calculate the initial surface area of the bubble. (A=4πr²)</div>
+                        <div class="toolbar" id="tb-15A"></div>
+                        <div id="ans-15A" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-15A"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> Convert the initial surface area into in² (2.54 cm = 1 in)</div>
+                        <div class="toolbar" id="tb-15B"></div>
+                        <div id="ans-15B" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-15B"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> The rate of change of the radius Rr = 7.65x10⁻⁴ mm/hr. Calculate the rate of change of the surface area (Ar) due to that change in radius in mm²/hr.</div>
+                        <div class="toolbar" id="tb-15C"></div>
+                        <div id="ans-15C" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-15C"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> Determine the rate of change of the surface area in in²/s (2.54 cm = 1 in).</div>
+                        <div class="toolbar" id="tb-15D"></div>
+                        <div id="ans-15D" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-15D"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>E.</strong> Determine the new area of the bubble after ½ a day has elapsed, in mm².</div>
+                        <div class="toolbar" id="tb-15E"></div>
+                        <div id="ans-15E" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-15E"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>F.</strong> Determine the new area of the bubble after ½ a day has elapsed, in in².</div>
+                        <div class="toolbar" id="tb-15F"></div>
+                        <div id="ans-15F" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-15F"></div>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+
+        <div class="summary-section">
+            <h2>Answers Dashboard Review</h2>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th style="width: 180px;">Question</th>
+                        <th>Submissions Matrix</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryTableBody">
+                    <tr><td style="font-weight:600;">Question 1</td><td id="sum-1"></td></tr>
+                    <tr><td style="font-weight:600;">Question 2</td><td id="sum-2"></td></tr>
+                    <tr><td style="font-weight:600;">Question 3</td><td id="sum-3"></td></tr>
+                    <tr><td style="font-weight:600;">Question 4</td><td id="sum-4"></td></tr>
+                    <tr><td style="font-weight:600;">Question 5</td><td id="sum-5"></td></tr>
+                    <tr>
+                        <td style="font-weight:600;">Question 6</td>
+                        <td>
+                            <div><strong>A:</strong> <span id="sum-6A"></span></div>
+                            <div><strong>B:</strong> <span id="sum-6B"></span></div>
+                            <div><strong>C:</strong> <span id="sum-6C"></span></div>
+                            <div><strong>D:</strong> <span id="sum-6D"></span></div>
+                            <div><strong>E:</strong> <span id="sum-6E"></span></div>
+                            <div><strong>G:</strong> <span id="sum-6G"></span></div>
+                            <div id="sum-photo-6" style="margin-top:10px;"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:600;">Question 7</td>
+                        <td>
+                            <div><strong>A:</strong> <span id="sum-7A"></span></div>
+                            <div><strong>B:</strong> <span id="sum-7B"></span></div>
+                            <div><strong>C:</strong> <span id="sum-7C"></span></div>
+                            <div><strong>D:</strong> <span id="sum-7D"></span></div>
+                            <div><strong>E:</strong> <span id="sum-7E"></span></div>
+                            <div><strong>G:</strong> <span id="sum-7G"></span></div>
+                            <div id="sum-photo-7" style="margin-top:10px;"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:600;">Question 8</td>
+                        <td>
+                            <div><strong>A:</strong> <span id="sum-8A"></span></div>
+                            <div><strong>B:</strong> <span id="sum-8B"></span></div>
+                            <div><strong>C:</strong> <span id="sum-8C"></span></div>
+                            <div><strong>D:</strong> <span id="sum-8D"></span></div>
+                            <div><strong>E:</strong> <span id="sum-8E"></span></div>
+                            <div><strong>G:</strong> <span id="sum-8G"></span></div>
+                            <div id="sum-photo-8" style="margin-top:10px;"></div>
+                        </td>
+                    </tr>
+                    <tr><td style="font-weight:600;">Question 9 (Part 1)</td><td id="sum-9_1"></td></tr>
+                    <tr><td style="font-weight:600;">Question 9 (Part 2)</td><td id="sum-9_2"></td></tr>
+                    <tr><td style="font-weight:600;">Question 10</td><td id="sum-10"></td></tr>
+                    <tr><td style="font-weight:600;">Question 11</td><td id="sum-11"></td></tr>
+                    <tr><td style="font-weight:600;">Question 12 (Part 1)</td><td id="sum-12_1"></td></tr>
+                    <tr><td style="font-weight:600;">Question 12 (Part 2)</td><td id="sum-12_2"></td></tr>
+                    <tr><td style="font-weight:600;">Question 13</td><td id="sum-13"></td></tr>
+                    <tr>
+                        <td style="font-weight:600;">Question 14</td>
+                        <td>
+                            <div><strong>A:</strong> <span id="sum-14A"></span><div id="sum-photo-14A" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                            <div><strong>B:</strong> <span id="sum-14B"></span><div id="sum-photo-14B" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                            <div><strong>C:</strong> <span id="sum-14C"></span><div id="sum-photo-14C" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                            <div><strong>D:</strong> <span id="sum-14D"></span><div id="sum-photo-14D" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                            <div><strong>E:</strong> <span id="sum-14E"></span><div id="sum-photo-14E" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                            <div><strong>F:</strong> <span id="sum-14F"></span><div id="sum-photo-14F" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                            <div><strong>G:</strong> <span id="sum-14G"></span><div id="sum-photo-14G" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                            <div><strong>H:</strong> <span id="sum-14H"></span><div id="sum-photo-14H" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:600;">Question 15</td>
+                        <td>
+                            <div><strong>A:</strong> <span id="sum-15A"></span><div id="sum-photo-15A" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                            <div><strong>B:</strong> <span id="sum-15B"></span><div id="sum-photo-15B" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                            <div><strong>C:</strong> <span id="sum-15C"></span><div id="sum-photo-15C" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                            <div><strong>D:</strong> <span id="sum-15D"></span><div id="sum-photo-15D" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                            <div><strong>E:</strong> <span id="sum-15E"></span><div id="sum-photo-15E" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                            <div><strong>F:</strong> <span id="sum-15F"></span><div id="sum-photo-15F" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="text-align: center;">
+            <div class="action-warning">
+                ⚠️ Once the print button is activated no further editing of the document can be performed.
+            </div>
+            <br>
+            <button type="button" class="btn-download-pdf" onclick="validateAndPrint();">
+                💾 Convert & Download Document PDF
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.keyCode === 67) { e.preventDefault(); return false; }
+            if ((e.ctrlKey || e.metaKey) && e.keyCode === 80) { e.preventDefault(); return false; }
+            if ((e.ctrlKey || e.metaKey) && e.keyCode === 83) { e.preventDefault(); return false; }
+            if (e.keyCode === 123 || ((e.ctrlKey || e.shiftKey || e.metaKey) && e.keyCode === 73)) { e.preventDefault(); return false; }
+        });
+
+        const customSymbols = ['→', '⇌', '°C', 'Δ', 'π', '±', '²', '³', '⁻', '⁺', '×', '·', 'µ', '⁻¹', '⁻²', '⁻³'];
+        
+        const individualQuestionIds = ["1", "2", "3", "4", "5", "9_1", "9_2", "10", "11", "12_1", "12_2", "13"];
+        const groupedQuestionSubIds = {
+            "6": ["6A", "6B", "6C", "6D", "6E", "6G"],
+            "7": ["7A", "7B", "7C", "7D", "7E", "7G"],
+            "8": ["8A", "8B", "8C", "8D", "8E", "8G"],
+            "14": ["14A", "14B", "14C", "14D", "14E", "14F", "14G", "14H"],
+            "15": ["15A", "15B", "15C", "15D", "15E", "15F"]
+        };
+
+        let allInputBoxIds = [...individualQuestionIds];
+        Object.values(groupedQuestionSubIds).forEach(subs => {
+            allInputBoxIds.push(...subs);
+        });
+
+        allInputBoxIds.forEach(id => {
+            const tb = document.getElementById(`tb-${id}`);
+            if (!tb) return;
+
+            const btnSup = document.createElement('button');
+            btnSup.type = 'button';
+            btnSup.innerHTML = 'x<sup>2</sup>';
+            btnSup.onclick = () => execCmd('superscript');
+            tb.appendChild(btnSup);
+
+            const btnSub = document.createElement('button');
+            btnSub.type = 'button';
+            btnSub.innerHTML = 'x<sub>2</sub>';
+            btnSub.onclick = () => execCmd('subscript');
+            tb.appendChild(btnSub);
+
+            customSymbols.forEach(sym => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'symbol-btn';
+                btn.innerText = sym;
+                btn.onclick = () => injectText(sym, `ans-${id}`);
+                tb.appendChild(btn);
+            });
+
+            const answerBox = document.getElementById(`ans-${id}`);
+            if (answerBox) {
+                answerBox.oninput = () => {
+                    const targetSummaryCell = document.getElementById(`sum-${id}`);
+                    if (targetSummaryCell) {
+                        targetSummaryCell.innerHTML = answerBox.innerHTML;
+                    }
+                };
+            }
+        });
+
+        document.execCommand("defaultParagraphSeparator", false, "p");
+
+        function execCmd(command) {
+            document.execCommand(command, false, null);
+        }
+
+        function injectText(text, targetId) {
+            const box = document.getElementById(targetId);
+            if (!box) return;
+            box.focus();
+            
+            const sel = window.getSelection();
+            if (sel.getRangeAt && sel.rangeCount) {
+                const range = sel.getRangeAt(0);
+                range.deleteContents();
+                const textNode = document.createTextNode(text);
+                range.insertNode(textNode);
+                
+                range.setStartAfter(textNode);
+                range.setEndAfter(textNode);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+            box.oninput();
+        }
+
+        let imgStates = {};
+
+        function createPhotoCropperEngine(parentId, questionKey) {
+            const parent = document.getElementById(parentId);
+            if (!parent) return;
+
+            imgStates[questionKey] = { imgObj: null, base64Raw: null, scale: 1, rot: 0, posX: 0, posY: 0, isDragging: false, startX: 0, startY: 0 };
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'photo-workspace-wrapper';
+
+            const innerCanvas = document.createElement('div');
+            innerCanvas.className = 'photo-inner-canvas';
+
+            const fileWrapper = document.createElement('div');
+            fileWrapper.className = 'file-input-wrapper';
+            fileWrapper.innerHTML = `
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:6px; color:#94a3b8;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <p style="margin:0; font-size:13px; font-weight:500;">Drag & Drop Calculation Work Image or Click to Browse</p>
+                <input type="file" accept="image/*" id="file-${questionKey}">
+            `;
+
+            const stage = document.createElement('div');
+            stage.className = 'cropper-stage';
+            stage.id = `stage-${questionKey}`;
+
+            const img = document.createElement('img');
+            img.className = 'cropper-image';
+            img.id = `img-${questionKey}`;
+            img.alt = 'Calculation Sheet Workspace';
+            stage.appendChild(img);
+
+            innerCanvas.appendChild(fileWrapper);
+            innerCanvas.appendChild(stage);
+            wrapper.appendChild(innerCanvas);
+
+            const controls = document.createElement('div');
+            controls.className = 'crop-controls';
+            controls.innerHTML = `
+                <div class="control-row">
+                    <label>Scale Zoom</label>
+                    <input type="range" id="zoom-${questionKey}" min="0.1" max="3" step="0.01" value="1">
+                </div>
+                <div class="control-row">
+                    <label>Rotation</label>
+                    <input type="range" id="rotate-${questionKey}" min="0" max="360" step="1" value="0">
+                </div>
+                <button type="button" class="btn-apply-crop" id="apply-${questionKey}">Commit Workspace Crop View</button>
+            `;
+
+            parent.appendChild(wrapper);
+            parent.appendChild(controls);
+
+            const fileInput = fileWrapper.querySelector('input[type="file"]');
+            const zoomSlider = controls.querySelector('input[id^="zoom-"]');
+            const rotateSlider = controls.querySelector('input[id^="rotate-"]');
+            const applyBtn = controls.querySelector('button');
+
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        imgStates[questionKey].base64Raw = event.target.result;
+                        img.src = event.target.result;
+                        img.onload = function() {
+                            fileWrapper.style.display = 'none';
+                            stage.style.display = 'block';
+                            controls.style.display = 'flex';
+                            
+                            imgStates[questionKey].scale = 1;
+                            imgStates[questionKey].rot = 0;
+                            imgStates[questionKey].posX = (stage.clientWidth - img.naturalWidth) / 2;
+                            imgStates[questionKey].posY = (stage.clientHeight - img.naturalHeight) / 2;
+                            
+                            zoomSlider.value = 1;
+                            rotateSlider.value = 0;
+                            updateImageTransforms(questionKey);
+                        };
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+
+            stage.addEventListener('mousedown', (e) => {
+                imgStates[questionKey].isDragging = true;
+                imgStates[questionKey].startX = e.clientX - imgStates[questionKey].posX;
+                imgStates[questionKey].startY = e.clientY - imgStates[questionKey].posY;
+                stage.style.cursor = 'grabbing';
+            });
+
+            window.addEventListener('mouseup', () => {
+                imgStates[questionKey].isDragging = false;
+                stage.style.cursor = 'move';
+            });
+
+            stage.addEventListener('mousemove', (e) => {
+                if (!imgStates[questionKey].isDragging) return;
+                imgStates[questionKey].posX = e.clientX - imgStates[questionKey].startX;
+                imgStates[questionKey].posY = e.clientY - imgStates[questionKey].startY;
+                updateImageTransforms(questionKey);
+            });
+
+            zoomSlider.addEventListener('input', (e) => {
+                imgStates[questionKey].scale = parseFloat(e.target.value);
+                updateImageTransforms(questionKey);
+            });
+
+            rotateSlider.addEventListener('input', (e) => {
+                imgStates[questionKey].rot = parseInt(e.target.value);
+                updateImageTransforms(questionKey);
+            });
+
+            applyBtn.addEventListener('click', () => {
+                processCommittedCropView(questionKey);
+            });
+        }
+
+        function updateImageTransforms(key) {
+            const img = document.getElementById(`img-${key}`);
+            if (img) {
+                img.style.transform = `translate(${imgStates[key].posX}px, ${imgStates[key].posY}px) scale(${imgStates[key].scale}) rotate(${imgStates[key].rot}deg)`;
+            }
+        }
+
+        function processCommittedCropView(key) {
+            const stage = document.getElementById(`stage-${key}`);
+            const img = document.getElementById(`img-${key}`);
+            
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = stage.clientWidth;
+            exportCanvas.height = stage.clientHeight;
+            const ctx = exportCanvas.getContext('2d');
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+
+            ctx.save();
+            ctx.translate(imgStates[key].posX + img.naturalWidth / 2, imgStates[key].posY + img.naturalHeight / 2);
+            ctx.scale(imgStates[key].scale, imgStates[key].scale);
+            ctx.rotate((imgStates[key].rot * Math.PI) / 180);
+            ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+            ctx.restore();
+
+            const croppedBase64 = exportCanvas.toDataURL('image/jpeg', 0.85);
+            const targetContainer = document.getElementById(`sum-photo-${key}`);
+            if(targetContainer) {
+                targetContainer.innerHTML = `
+                    <p style="font-size:11px; font-weight:600; color:#10b981; margin-bottom:4px;">✓ Calculation workspace view synchronized:</p>
+                    <img src="${croppedBase64}" class="summary-preview-img" alt="Committed work">
+                `;
+            } else {
+                const globalCell = document.getElementById(`sum-${key}`);
+                if(globalCell){
+                    let photoDiv = globalCell.querySelector('.sum-photo-inline');
+                    if(!photoDiv){
+                        photoDiv = document.createElement('div');
+                        photoDiv.className = 'sum-photo-inline';
+                        photoDiv.style.marginTop = '10px';
+                        globalCell.appendChild(photoDiv);
+                    }
+                    photoDiv.innerHTML = `
+                        <p style="font-size:11px; font-weight:600; color:#10b981; margin-bottom:4px;">✓ Calculation workspace view synchronized:</p>
+                        <img src="${croppedBase64}" class="summary-preview-img" alt="Committed work">
+                    `;
+                }
+            }
+            alert("Calculation work sheet view pinned to the live review matrix summary successfully.");
+        }
+
+        const standardCropperKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9_1", "9_2", "10", "11", "12_1", "12_2", "13", "14A", "14B", "14C", "14D", "14E", "14F", "14G", "14H", "15A", "15B", "15C", "15D", "15E", "15F"];
+        standardCropperKeys.forEach(key => {
+            createPhotoCropperEngine(`cropperContainer-${key}`, key);
+        });
+
+        function validateAndPrint() {
+            const banner = document.getElementById('validationBanner');
+            const studentName = document.getElementById('studentName').value.trim();
+            const answerBoxes = document.querySelectorAll('.answer-box');
+            
+            let allFilled = true;
+            if (!studentName) allFilled = false;
+            
+            answerBoxes.forEach(box => {
+                if (!box.textContent.trim()) {
+                    // Check if it's a subquestion box
+                    allFilled = false;
+                }
+            });
+            
+            if (!allFilled) {
+                banner.style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                banner.style.display = 'none';
+                window.print();
+                
+                setTimeout(() => {
+                    document.getElementById('studentName').disabled = true;
+                    answerBoxes.forEach(box => {
+                        box.setAttribute('contenteditable', 'false');
+                    });
+                    document.querySelectorAll('.toolbar').forEach(tb => tb.style.display = 'none');
+                    document.querySelectorAll('.crop-controls').forEach(ctrl => ctrl.style.display = 'none');
+                    document.querySelectorAll('.file-input-wrapper').forEach(fw => fw.style.display = 'none');
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>
