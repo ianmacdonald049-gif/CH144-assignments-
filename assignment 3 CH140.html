@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment 3, CH140 Fall 2026</title>
+    <style>
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            box-sizing: border-box;
+        }
+        
+        input[type="text"], [contenteditable="true"], button, select, input[type="range"] {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .validation-alert {
+            display: none;
+            background-color: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 15px;
+            text-align: center;
+        }
+
+        .max-points-container {
+            display: flex;
+            justify-content: center;
+            margin-top: -15px;
+            margin-bottom: 30px;
+        }
+
+        .max-points-tally {
+            background-color: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-warning {
+            color: #dc2626;
+            background-color: #fef2f2;
+            border: 1px dashed #fca5a5;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 20px auto 10px auto;
+            display: inline-block;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        @media print {
+            @page {
+                margin: 0.5in;
+            }
+            body { 
+                background: white; 
+                color: black; 
+                padding: 0;
+                margin: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            body::before {
+                content: "";
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: 99999;
+                pointer-events: none;
+                opacity: 0.05;
+                background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='250' height='150' viewBox='0 0 250 150'><text x='30' y='100' font-family='Segoe UI, sans-serif' font-size='14' font-weight='bold' fill='%23000000' transform='rotate(-30 30 100)'>CH140 Completed Assignment</text></svg>");
+                background-repeat: repeat;
+            }
+
+            .container { 
+                box-shadow: none; 
+                padding: 0; 
+                max-width: 100%;
+                width: 100%;
+            }
+            .toolbar, .crop-controls, .file-input-wrapper, .btn-download-pdf, .validation-alert, .action-warning { 
+                display: none !important; 
+            }
+            .question-block, .sub-question-block, .summary-table tr, .student-info-block, .summary-section { 
+                page-break-inside: avoid !important; 
+                break-inside: avoid !important;
+            }
+            .max-points-tally { background: none; border: 1px solid #000; color: #000; box-shadow: none; }
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e3a8a;
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+
+        .student-info-block {
+            display: flex;
+            gap: 20px;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 30px;
+        }
+
+        .info-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-group label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #475569;
+        }
+
+        .info-group input {
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .info-group input:focus {
+            border-color: #3b82f6;
+        }
+
+        .question-block {
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .question-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .point-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+            border: 1px solid #bae6fd;
+        }
+
+        .question-text {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .sub-question-block {
+            margin-top: 15px;
+            padding-left: 15px;
+            border-left: 3px solid #cbd5e1;
+            margin-bottom: 15px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 4px;
+            background: #f1f5f9;
+            padding: 6px;
+            border-radius: 6px 6px 0 0;
+            border: 1px solid #cbd5e1;
+            border-bottom: none;
+            flex-wrap: wrap;
+        }
+
+        .toolbar button {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #334155;
+            transition: all 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #e2e8f0;
+            color: #000;
+        }
+
+        .toolbar .symbol-btn {
+            font-family: Cambria, Georgia, serif;
+            font-weight: bold;
+        }
+
+        .answer-box {
+            min-height: 90px;
+            border: 1px solid #cbd5e1;
+            border-radius: 0 0 6px 6px;
+            padding: 12px;
+            background: white;
+            outline: none;
+            font-size: 15px;
+            overflow-y: auto;
+            transition: border-color 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .answer-box:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+
+        .photo-workspace-wrapper {
+            width: 100%;
+            position: relative;
+            background: #0f172a;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px dashed #cbd5e1;
+            padding-top: 50%; /* Adjusted for a wider box layout suitable for multiple subquestions */
+            margin-bottom: 10px;
+        }
+
+        .photo-inner-canvas {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .file-input-wrapper {
+            position: absolute;
+            z-index: 10;
+            text-align: center;
+            color: #94a3b8;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .cropper-stage {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            cursor: move;
+        }
+
+        .cropper-image {
+            position: absolute;
+            transform-origin: center center;
+            max-width: none;
+            max-height: none;
+        }
+
+        .crop-controls {
+            display: none;
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 0 0 8px 8px;
+            color: white;
+            gap: 15px;
+            flex-direction: column;
+            margin-bottom: 25px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .control-row label { width: 80px; }
+        .control-row input[type="range"] { flex: 1; }
+
+        .btn-apply-crop {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            align-self: flex-end;
+        }
+
+        .btn-apply-crop:hover { background: #059669; }
+
+        .summary-section {
+            margin-top: 20px;
+            padding-top: 30px;
+            border-top: 3px solid #1e3a8a;
+        }
+
+        .summary-section h2 {
+            color: #1e3a8a;
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 14px;
+        }
+
+        .summary-table th, .summary-table td {
+            border: 1px solid #cbd5e1;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .summary-table th {
+            background: #f8fafc;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .summary-table td p {
+            margin: 0;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .summary-preview-img {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            display: block;
+        }
+
+        .btn-download-pdf {
+            background-color: #1e3a8a; 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 6px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-download-pdf:hover {
+            background-color: #2563eb;
+        }
+
+        .q1-diagram {
+            margin: 15px 0;
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            display: block;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="container">
+        <div id="validationBanner" class="validation-alert">
+            ⚠️ Attention: Please fill in your Student Name and answer all fields before converting to a PDF document.
+        </div>
+
+        <h1>Assignment 3, CH140 Fall 2026</h1>
+        
+        <div class="max-points-container">
+            <div class="max-points-tally">
+                📊 Maximum Points Available: 103 pts
+            </div>
+        </div>
+
+        <div class="student-info-block">
+            <div class="info-group">
+                <label for="studentName">Student Full Name</label>
+                <input type="text" id="studentName" placeholder="Enter full name..." autocomplete="off">
+            </div>
+        </div>
+
+        <form id="assignmentForm" onsubmit="return false;">
+            <div id="questionsContainer">
+                
+                <!-- Questions 1-18 Header Context -->
+                <div style="background-color: #f8fafc; border-left: 4px solid #1e3a8a; padding: 15px; margin-bottom: 25px; border-radius: 0 4px 4px 0;">
+                    <p style="margin: 0; font-weight: 600; color: #1e293b;">Instructions for Questions 1-18:</p>
+                    <p style="margin: 5px 0 0 0; font-size: 14px; color: #475569;">For each statement below state whether it is true or false. Explain WHY the statement is wrong and provide a correct explanation. Note: 1-word answers or negations of the sentence for FALSE statements are not acceptable. Answering TRUE for true statements is acceptable.</p>
+                </div>
+
+                <!-- Q1 -->
+                <div class="question-block" id="block-1">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">1. The diagram below depicts the behavior of a beam of cathode rays passing through a pair of capacitive plates.</span>
+                    </div>
+                    <!-- Embedded SVG to recreate user's image exactly without external dependency -->
+                    <svg class="q1-diagram" width="450" height="150" viewBox="0 0 450 150" xmlns="http://www.w3.org/2000/svg" style="background:white;">
+                        <rect x="0" y="0" width="450" height="150" fill="white"/>
+                        <text x="10" y="75" font-family="'Segoe UI', sans-serif" font-size="20" fill="black">Cathode Ray Beam</text>
+                        <path d="M190,75 L380,75 C400,75 410,65 425,45" fill="none" stroke="black" stroke-width="2" stroke-dasharray="6,4"/>
+                        <!-- Arrow head -->
+                        <path d="M418,48 L427,42 L427,53" fill="none" stroke="black" stroke-width="2"/>
+                        <!-- Cathode plate -->
+                        <polygon points="260,25 360,25 375,55 275,55" fill="#c0c0c0" stroke="black" stroke-width="1.5"/>
+                        <text x="280" y="46" font-family="'Segoe UI', sans-serif" font-size="18" fill="white" font-weight="500">Cathode</text>
+                        <!-- Anode plate -->
+                        <polygon points="260,85 360,85 375,115 275,115" fill="#c0c0c0" stroke="black" stroke-width="1.5"/>
+                        <text x="288" y="106" font-family="'Segoe UI', sans-serif" font-size="18" fill="white" font-weight="500">Anode</text>
+                    </svg>
+                    <div class="toolbar" id="tb-1"></div>
+                    <div id="ans-1" class="answer-box" contenteditable="true" placeholder="Type True or False + explanation here..."></div>
+                </div>
+
+                <!-- Q2 -->
+                <div class="question-block" id="block-2">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">2. We know that cathode rays are composed of particles because they have a finite charge to mass ratio of 1.75&times;10<sup>11</sup> C/kg.</span>
+                    </div>
+                    <div class="toolbar" id="tb-2"></div>
+                    <div id="ans-2" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q3 -->
+                <div class="question-block" id="block-3">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">3. The electron and the hydrogen have mass/charge ratios of 1.75&times;10<sup>11</sup> C/kg and 9.58&times;10<sup>7</sup> C/kg respectively. This indicates that the mass of an electron is 1000 times larger than the mass of a hydrogen atom.</span>
+                    </div>
+                    <div class="toolbar" id="tb-3"></div>
+                    <div id="ans-3" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q4 -->
+                <div class="question-block" id="block-4">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">4. Electrons are deflected toward the anode between charged capacitive plates in a Crooke’s tube. Thompson’s Plum Pudding model has the electron embedded in a field of negative charge to ensure the atom has an overall charge of zero coulombs.</span>
+                    </div>
+                    <div class="toolbar" id="tb-4"></div>
+                    <div id="ans-4" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q5 -->
+                <div class="question-block" id="block-5">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">5. Millikan’s oil drop experiment showed that the charge on oil droplets due to ionized electrons was always divisible by 1.602&times;10<sup>-19</sup> C indicating this was the charge on a single electron.</span>
+                    </div>
+                    <div class="toolbar" id="tb-5"></div>
+                    <div id="ans-5" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q6 -->
+                <div class="question-block" id="block-6">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">6. Heavy, highly charged alpha-particles were deflected at high scattering angles by Rutherford’s experiment confirming the presence of a positive field as hypothesized in Thomspon’s Plum Pudding model.</span>
+                    </div>
+                    <div class="toolbar" id="tb-6"></div>
+                    <div id="ans-6" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q7 -->
+                <div class="question-block" id="block-7">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">7. Greater than 99% of an atom’s mass is contained within an atom’s electrons.</span>
+                    </div>
+                    <div class="toolbar" id="tb-7"></div>
+                    <div id="ans-7" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q8 -->
+                <div class="question-block" id="block-8">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">8. Bohr’s atomic model is called the “Planetary Model” because electrons orbit the nucleus akin to the way the planets orbit the sun. The difference is that the electromagnetic force keeps electrons in orbit around the nucleus while gravity keeps the planets in orbit around The Sun.</span>
+                    </div>
+                    <div class="toolbar" id="tb-8"></div>
+                    <div id="ans-8" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q9 -->
+                <div class="question-block" id="block-9">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">9. In the planetary model of the solar system the planets can occupy any orbit at any radius around the sun. In the planetary model of the atom (Bohr’s atom) the electrons can also occupy an orbit at any radius from the nucleus.</span>
+                    </div>
+                    <div class="toolbar" id="tb-9"></div>
+                    <div id="ans-9" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q10 -->
+                <div class="question-block" id="block-10">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">10. According to Coulomb’s law two positively-charged atomic nuclei will be attracted to one another because like charges attract each other.</span>
+                    </div>
+                    <div class="toolbar" id="tb-10"></div>
+                    <div id="ans-10" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q11 -->
+                <div class="question-block" id="block-11">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">11. Electromagnetic forces (Coulomb’s law) between electrons and neutrons keep the electrons in orbit around nuclei.</span>
+                    </div>
+                    <div class="toolbar" id="tb-11"></div>
+                    <div id="ans-11" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q12 -->
+                <div class="question-block" id="block-12">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">12. The Strong Force holds protons and protons, neutrons and neutrons, and protons and neutrons together in the nucleus.</span>
+                    </div>
+                    <div class="toolbar" id="tb-12"></div>
+                    <div id="ans-12" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q13 -->
+                <div class="question-block" id="block-13">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">13. The Strong Force is attractive or repulsive depending on the charge of the particle.</span>
+                    </div>
+                    <div class="toolbar" id="tb-13"></div>
+                    <div id="ans-13" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q14 -->
+                <div class="question-block" id="block-14">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">14. An electron and neutron are squeezed into close proximity (&lt; 10<sup>-15</sup> m). The strong force will bind them together despite their difference in charges.</span>
+                    </div>
+                    <div class="toolbar" id="tb-14"></div>
+                    <div id="ans-14" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q15 -->
+                <div class="question-block" id="block-15">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">15. Neutrons are critical for nuclear stability because they position the protons close enough together to allow the Strong Force to bind them together while keeping them far enough apart to reduce the electromagnetic repulsion between them.</span>
+                    </div>
+                    <div class="toolbar" id="tb-15"></div>
+                    <div id="ans-15" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q16 -->
+                <div class="question-block" id="block-16">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">16. Isotopes are atoms that have the same number of neutrons but different numbers of protons</span>
+                    </div>
+                    <div class="toolbar" id="tb-16"></div>
+                    <div id="ans-16" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q17 -->
+                <div class="question-block" id="block-17">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">17. Two atoms have the same number of neutrons but different numbers of protons. Both atoms have the same chemical properties.</span>
+                    </div>
+                    <div class="toolbar" id="tb-17"></div>
+                    <div id="ans-17" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q18 -->
+                <div class="question-block" id="block-18">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">18. Atomic Mass and Mass Number represent the same quantity.</span>
+                    </div>
+                    <div class="toolbar" id="tb-18"></div>
+                    <div id="ans-18" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q19 -->
+                <div class="question-block" id="block-19">
+                    <div class="question-header">
+                        <span class="point-badge">12 pts</span>
+                        <span class="question-text">Question 19: State the Name, Atomic Number and Mass Number for each of the following isotopes.</span>
+                    </div>
+                    
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> <sup>1</sup><sub>3</sub>H</div>
+                        <div class="toolbar" id="tb-19A"></div>
+                        <div id="ans-19A" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> <sup>54</sup><sub>24</sub>Cr</div>
+                        <div class="toolbar" id="tb-19B"></div>
+                        <div id="ans-19B" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> <sup>81</sup><sub>35</sub>Br</div>
+                        <div class="toolbar" id="tb-19C"></div>
+                        <div id="ans-19C" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> <sup>133</sup><sub>55</sub>Cs</div>
+                        <div class="toolbar" id="tb-19D"></div>
+                        <div id="ans-19D" class="answer-box" contenteditable="true"></div>
+                    </div>
+                </div>
+
+                <!-- Q20 (First element in list) -->
+                <div class="question-block" id="block-20">
+                    <div class="question-header">
+                        <span class="point-badge">12 pts</span>
+                        <span class="question-text">Question 20 (Identity): From the isotopic formulas below determine the identity of the atom. State the Atomic Number and Mass Number for each isotopes.</span>
+                    </div>
+                    
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> <sup>18</sup><sub>8</sub>X</div>
+                        <div class="toolbar" id="tb-20A"></div>
+                        <div id="ans-20A" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-20A"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> <sup>135</sup><sub>56</sub>X</div>
+                        <div class="toolbar" id="tb-20B"></div>
+                        <div id="ans-20B" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-20B"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> <sup>209</sup><sub>83</sub>X</div>
+                        <div class="toolbar" id="tb-20C"></div>
+                        <div id="ans-20C" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-20C"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> <sup>81</sup><sub>35</sub>X</div>
+                        <div class="toolbar" id="tb-20D"></div>
+                        <div id="ans-20D" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-20D"></div>
+                    </div>
+                </div>
+
+                <!-- Q20_2 (Second question 20 in prompt) -->
+                <div class="question-block" id="block-20_2">
+                    <div class="question-header">
+                        <span class="point-badge">12 pts</span>
+                        <span class="question-text">Question 20 (Subatomic Particles): For each isotope below calculate the number of protons, neutrons and electrons that would be found in an electrically neutral atom. Show your work</span>
+                    </div>
+                    
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> <sup>13</sup><sub>6</sub>C</div>
+                        <div class="toolbar" id="tb-20_2A"></div>
+                        <div id="ans-20_2A" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> <sup>208</sup><sub>82</sub>Pb</div>
+                        <div class="toolbar" id="tb-20_2B"></div>
+                        <div id="ans-20_2B" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> <sup>36</sup><sub>16</sub>S</div>
+                        <div class="toolbar" id="tb-20_2C"></div>
+                        <div id="ans-20_2C" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> <sup>136</sup><sub>54</sub>Xe</div>
+                        <div class="toolbar" id="tb-20_2D"></div>
+                        <div id="ans-20_2D" class="answer-box" contenteditable="true"></div>
+                    </div>
+                </div>
+
+                <!-- Q21 -->
+                <div class="question-block" id="block-21">
+                    <div class="question-header">
+                        <span class="point-badge">4 pts</span>
+                        <span class="question-text">Question 21: Natural Neon normally contains 3 stable isotopes Ne-20 (90.48%) Ne-21 (0.27%) and Ne-22 (9.25%) and has an atomic mass equal to 20.180 AMU. A nuclear reactor produces a sample of Neon enriched in the rare isotope Ne-34. This new mixture has Ne-20 (89.73%), Ne-21 (0.27%), Ne-22 (8.75%) and Ne-34 (1.25%). Calculate the atomic mass of the Ne-34 enriched Neon. Show your work.</span>
+                    </div>
+                    <div class="toolbar" id="tb-21"></div>
+                    <div id="ans-21" class="answer-box" contenteditable="true" placeholder="Type final values or work here..."></div>
+                    <div id="cropperContainer-21"></div>
+                </div>
+
+                <!-- Q22 -->
+                <div class="question-block" id="block-22">
+                    <div class="question-header">
+                        <span class="point-badge">4 pts</span>
+                        <span class="question-text">Question 22: Explain why Neon in question 21 has two different atomic masses despite both samples behaving chemically identical.</span>
+                    </div>
+                    <div class="toolbar" id="tb-22"></div>
+                    <div id="ans-22" class="answer-box" contenteditable="true" placeholder="Type explanation here..."></div>
+                </div>
+
+                <!-- Q23 -->
+                <div class="question-block" id="block-23">
+                    <div class="question-header">
+                        <span class="point-badge">5 pts</span>
+                        <span class="question-text">Question 23: Natural Calcium contains 6 isotopes Ca-40 (96.90%), Ca-42 (0.647%), Ca-43 (0.172%), Ca-44 (2.090%), Ca-46 (0.004%) and Ca-48 (0.187%). Calculate the amount, in grams, of each isotope of calcium in 2 g chuck of calcium metal. Show your work.</span>
+                    </div>
+                    <div class="toolbar" id="tb-23"></div>
+                    <div id="ans-23" class="answer-box" contenteditable="true" placeholder="Type final values or work here..."></div>
+                    <div id="cropperContainer-23"></div>
+                </div>
+
+                <!-- Q24 -->
+                <div class="question-block" id="block-24">
+                    <div class="question-header">
+                        <span class="point-badge">25 pts</span>
+                        <span class="question-text">Question 24: Describe the process of nucleosynthesis. Be sure, to explain the interplay between the 3 fundamental forces (gravity, strong, and electromagnetic forces) and how that drives nucleosynthesis. Explain how temperature and pressure results from these three forces. Also be sure to detail the natural and unnatural processes create the elements and describe why we see the elemental abundances we observe in the universe. Bullet lists are not acceptable. Understandability and organization are considered in grading.</span>
+                    </div>
+                    <div class="toolbar" id="tb-24"></div>
+                    <div id="ans-24" class="answer-box" contenteditable="true" placeholder="Type comprehensive response here..."></div>
+                </div>
+
+            </div>
+        </form>
+
+        <div class="summary-section">
+            <h2>Answers</h2>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th style="width: 180px;">Question</th>
+                        <th>Answers</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryTableBody">
+                    <!-- Q1-18 Summary Rows -->
+                    <script>
+                        for(let i=1; i<=18; i++) {
+                            document.write(`<tr><td style="font-weight:600;">Question ${i}</td><td id="sum-${i}"></td></tr>`);
+                        }
+                    </script>
+                    
+                    <!-- Q19 Summary -->
+                    <tr>
+                        <td style="font-weight:600;">Question 19</td>
+                        <td>
+                            <div><strong>A:</strong> <span id="sum-19A"></span></div>
+                            <div><strong>B:</strong> <span id="sum-19B"></span></div>
+                            <div><strong>C:</strong> <span id="sum-19C"></span></div>
+                            <div><strong>D:</strong> <span id="sum-19D"></span></div>
+                        </td>
+                    </tr>
+
+                    <!-- Q20 Summary -->
+                    <tr>
+                        <td style="font-weight:600;">Question 20 (Identity)</td>
+                        <td>
+                            <div><strong>A:</strong> <span id="sum-20A"></span><div id="sum-photo-20A" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                            <div><strong>B:</strong> <span id="sum-20B"></span><div id="sum-photo-20B" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                            <div><strong>C:</strong> <span id="sum-20C"></span><div id="sum-photo-20C" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                            <div><strong>D:</strong> <span id="sum-20D"></span><div id="sum-photo-20D" style="margin-left: 20px; margin-top:5px; margin-bottom:10px;"></div></div>
+                        </td>
+                    </tr>
+
+                    <!-- Q20_2 Summary -->
+                    <tr>
+                        <td style="font-weight:600;">Question 20 (Subatomic Particles)</td>
+                        <td>
+                            <div><strong>A:</strong> <span id="sum-20_2A"></span></div>
+                            <div><strong>B:</strong> <span id="sum-20_2B"></span></div>
+                            <div><strong>C:</strong> <span id="sum-20_2C"></span></div>
+                            <div><strong>D:</strong> <span id="sum-20_2D"></span></div>
+                        </td>
+                    </tr>
+
+                    <!-- Q21-24 Summary -->
+                    <tr><td style="font-weight:600;">Question 21</td><td id="sum-21"></td></tr>
+                    <tr><td style="font-weight:600;">Question 22</td><td id="sum-22"></td></tr>
+                    <tr><td style="font-weight:600;">Question 23</td><td id="sum-23"></td></tr>
+                    <tr><td style="font-weight:600;">Question 24</td><td id="sum-24"></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="text-align: center;">
+            <div class="action-warning">
+                ⚠️ Once the print button is activated no further editing of the document can be performed.
+            </div>
+            <br>
+            <button type="button" class="btn-download-pdf" onclick="validateAndPrint();">
+                💾 Convert & Download Document PDF
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.keyCode === 67) { e.preventDefault(); return false; }
+            if ((e.ctrlKey || e.metaKey) && e.keyCode === 80) { e.preventDefault(); return false; }
+            if ((e.ctrlKey || e.metaKey) && e.keyCode === 83) { e.preventDefault(); return false; }
+            if (e.keyCode === 123 || ((e.ctrlKey || e.shiftKey || e.metaKey) && e.keyCode === 73)) { e.preventDefault(); return false; }
+        });
+
+        const customSymbols = ['→', '⇌', '°C', 'Δ', 'π', '±', '²', '³', '⁻', '⁺', '×', '·', 'µ', '⁻¹', '⁻²', '⁻³'];
+        
+        let allInputBoxIds = [];
+        for(let i=1; i<=18; i++) allInputBoxIds.push(i.toString());
+        allInputBoxIds.push("19A", "19B", "19C", "19D");
+        allInputBoxIds.push("20A", "20B", "20C", "20D");
+        allInputBoxIds.push("20_2A", "20_2B", "20_2C", "20_2D");
+        allInputBoxIds.push("21", "22", "23", "24");
+
+        allInputBoxIds.forEach(id => {
+            const tb = document.getElementById(`tb-${id}`);
+            if (!tb) return;
+
+            const btnSup = document.createElement('button');
+            btnSup.type = 'button';
+            btnSup.innerHTML = 'x<sup>2</sup>';
+            btnSup.onclick = () => execCmd('superscript');
+            tb.appendChild(btnSup);
+
+            const btnSub = document.createElement('button');
+            btnSub.type = 'button';
+            btnSub.innerHTML = 'x<sub>2</sub>';
+            btnSub.onclick = () => execCmd('subscript');
+            tb.appendChild(btnSub);
+
+            customSymbols.forEach(sym => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'symbol-btn';
+                btn.innerText = sym;
+                btn.onclick = () => injectText(sym, `ans-${id}`);
+                tb.appendChild(btn);
+            });
+
+            const answerBox = document.getElementById(`ans-${id}`);
+            if (answerBox) {
+                answerBox.oninput = () => {
+                    const targetSummaryCell = document.getElementById(`sum-${id}`);
+                    if (targetSummaryCell) {
+                        targetSummaryCell.innerHTML = answerBox.innerHTML;
+                    }
+                };
+            }
+        });
+
+        document.execCommand("defaultParagraphSeparator", false, "p");
+
+        function execCmd(command) {
+            document.execCommand(command, false, null);
+        }
+
+        function injectText(text, targetId) {
+            const box = document.getElementById(targetId);
+            if (!box) return;
+            box.focus();
+            
+            const sel = window.getSelection();
+            if (sel.getRangeAt && sel.rangeCount) {
+                const range = sel.getRangeAt(0);
+                range.deleteContents();
+                const textNode = document.createTextNode(text);
+                range.insertNode(textNode);
+                
+                range.setStartAfter(textNode);
+                range.setEndAfter(textNode);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+            box.oninput();
+        }
+
+        let imgStates = {};
+
+        function createPhotoCropperEngine(parentId, questionKey) {
+            const parent = document.getElementById(parentId);
+            if (!parent) return;
+
+            imgStates[questionKey] = { imgObj: null, base64Raw: null, scale: 1, rot: 0, posX: 0, posY: 0, isDragging: false, startX: 0, startY: 0 };
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'photo-workspace-wrapper';
+
+            const innerCanvas = document.createElement('div');
+            innerCanvas.className = 'photo-inner-canvas';
+
+            const fileWrapper = document.createElement('div');
+            fileWrapper.className = 'file-input-wrapper';
+            fileWrapper.innerHTML = `
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:6px; color:#94a3b8;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <p style="margin:0; font-size:13px; font-weight:500;">Drag & Drop Calculation Work Image or Click to Browse</p>
+                <input type="file" accept="image/*" id="file-${questionKey}">
+            `;
+
+            const stage = document.createElement('div');
+            stage.className = 'cropper-stage';
+            stage.id = `stage-${questionKey}`;
+
+            const img = document.createElement('img');
+            img.className = 'cropper-image';
+            img.id = `img-${questionKey}`;
+            img.alt = 'Calculation Sheet Workspace';
+            stage.appendChild(img);
+
+            innerCanvas.appendChild(fileWrapper);
+            innerCanvas.appendChild(stage);
+            wrapper.appendChild(innerCanvas);
+
+            const controls = document.createElement('div');
+            controls.className = 'crop-controls';
+            controls.innerHTML = `
+                <div class="control-row">
+                    <label>Scale Zoom</label>
+                    <input type="range" id="zoom-${questionKey}" min="0.1" max="3" step="0.01" value="1">
+                </div>
+                <div class="control-row">
+                    <label>Rotation</label>
+                    <input type="range" id="rotate-${questionKey}" min="0" max="360" step="1" value="0">
+                </div>
+                <button type="button" class="btn-apply-crop" id="apply-${questionKey}">Commit Workspace Crop View</button>
+            `;
+
+            parent.appendChild(wrapper);
+            parent.appendChild(controls);
+
+            const fileInput = fileWrapper.querySelector('input[type="file"]');
+            const zoomSlider = controls.querySelector('input[id^="zoom-"]');
+            const rotateSlider = controls.querySelector('input[id^="rotate-"]');
+            const applyBtn = controls.querySelector('button');
+
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        imgStates[questionKey].base64Raw = event.target.result;
+                        img.src = event.target.result;
+                        img.onload = function() {
+                            fileWrapper.style.display = 'none';
+                            stage.style.display = 'block';
+                            controls.style.display = 'flex';
+                            
+                            imgStates[questionKey].scale = 1;
+                            imgStates[questionKey].rot = 0;
+                            imgStates[questionKey].posX = (stage.clientWidth - img.naturalWidth) / 2;
+                            imgStates[questionKey].posY = (stage.clientHeight - img.naturalHeight) / 2;
+                            
+                            zoomSlider.value = 1;
+                            rotateSlider.value = 0;
+                            updateImageTransforms(questionKey);
+                        };
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+
+            stage.addEventListener('mousedown', (e) => {
+                imgStates[questionKey].isDragging = true;
+                imgStates[questionKey].startX = e.clientX - imgStates[questionKey].posX;
+                imgStates[questionKey].startY = e.clientY - imgStates[questionKey].posY;
+                stage.style.cursor = 'grabbing';
+            });
+
+            window.addEventListener('mouseup', () => {
+                imgStates[questionKey].isDragging = false;
+                stage.style.cursor = 'move';
+            });
+
+            stage.addEventListener('mousemove', (e) => {
+                if (!imgStates[questionKey].isDragging) return;
+                imgStates[questionKey].posX = e.clientX - imgStates[questionKey].startX;
+                imgStates[questionKey].posY = e.clientY - imgStates[questionKey].startY;
+                updateImageTransforms(questionKey);
+            });
+
+            zoomSlider.addEventListener('input', (e) => {
+                imgStates[questionKey].scale = parseFloat(e.target.value);
+                updateImageTransforms(questionKey);
+            });
+
+            rotateSlider.addEventListener('input', (e) => {
+                imgStates[questionKey].rot = parseInt(e.target.value);
+                updateImageTransforms(questionKey);
+            });
+
+            applyBtn.addEventListener('click', () => {
+                processCommittedCropView(questionKey);
+            });
+        }
+
+        function updateImageTransforms(key) {
+            const img = document.getElementById(`img-${key}`);
+            if (img) {
+                img.style.transform = `translate(${imgStates[key].posX}px, ${imgStates[key].posY}px) scale(${imgStates[key].scale}) rotate(${imgStates[key].rot}deg)`;
+            }
+        }
+
+        function processCommittedCropView(key) {
+            const stage = document.getElementById(`stage-${key}`);
+            const img = document.getElementById(`img-${key}`);
+            
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = stage.clientWidth;
+            exportCanvas.height = stage.clientHeight;
+            const ctx = exportCanvas.getContext('2d');
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+
+            ctx.save();
+            ctx.translate(imgStates[key].posX + img.naturalWidth / 2, imgStates[key].posY + img.naturalHeight / 2);
+            ctx.scale(imgStates[key].scale, imgStates[key].scale);
+            ctx.rotate((imgStates[key].rot * Math.PI) / 180);
+            ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+            ctx.restore();
+
+            const croppedBase64 = exportCanvas.toDataURL('image/jpeg', 0.85);
+            const targetContainer = document.getElementById(`sum-photo-${key}`);
+            if(targetContainer) {
+                targetContainer.innerHTML = `
+                    <p style="font-size:11px; font-weight:600; color:#10b981; margin-bottom:4px;">✓ Calculation workspace view synchronized:</p>
+                    <img src="${croppedBase64}" class="summary-preview-img" alt="Committed work">
+                `;
+            } else {
+                const globalCell = document.getElementById(`sum-${key}`);
+                if(globalCell){
+                    let photoDiv = globalCell.querySelector('.sum-photo-inline');
+                    if(!photoDiv){
+                        photoDiv = document.createElement('div');
+                        photoDiv.className = 'sum-photo-inline';
+                        photoDiv.style.marginTop = '10px';
+                        globalCell.appendChild(photoDiv);
+                    }
+                    photoDiv.innerHTML = `
+                        <p style="font-size:11px; font-weight:600; color:#10b981; margin-bottom:4px;">✓ Calculation workspace view synchronized:</p>
+                        <img src="${croppedBase64}" class="summary-preview-img" alt="Committed work">
+                    `;
+                }
+            }
+            alert("Calculation work sheet view pinned to the live review matrix summary successfully.");
+        }
+
+        const standardCropperKeys = ["20A", "20B", "20C", "20D", "21", "23"];
+        standardCropperKeys.forEach(key => {
+            createPhotoCropperEngine(`cropperContainer-${key}`, key);
+        });
+
+        function validateAndPrint() {
+            const banner = document.getElementById('validationBanner');
+            const studentName = document.getElementById('studentName').value.trim();
+            const answerBoxes = document.querySelectorAll('.answer-box');
+            
+            let allFilled = true;
+            if (!studentName) allFilled = false;
+            
+            answerBoxes.forEach(box => {
+                if (!box.textContent.trim()) {
+                    allFilled = false;
+                }
+            });
+            
+            if (!allFilled) {
+                banner.style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                banner.style.display = 'none';
+                window.print();
+                
+                setTimeout(() => {
+                    document.getElementById('studentName').disabled = true;
+                    answerBoxes.forEach(box => {
+                        box.setAttribute('contenteditable', 'false');
+                    });
+                    document.querySelectorAll('.toolbar').forEach(tb => tb.style.display = 'none');
+                    document.querySelectorAll('.crop-controls').forEach(ctrl => ctrl.style.display = 'none');
+                    document.querySelectorAll('.file-input-wrapper').forEach(fw => fw.style.display = 'none');
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>
