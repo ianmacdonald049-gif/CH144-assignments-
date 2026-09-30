@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment 4, CH140 Fall 2026</title>
+    
+	<style>
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            box-sizing: border-box;
+        }
+        
+        input[type="text"], [contenteditable="true"], button, select, input[type="range"] {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .validation-alert {
+            display: none;
+            background-color: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 15px;
+            text-align: center;
+        }
+
+        .max-points-container {
+            display: flex;
+            justify-content: center;
+            margin-top: -15px;
+            margin-bottom: 30px;
+        }
+
+        .max-points-tally {
+            background-color: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-warning {
+            color: #dc2626;
+            background-color: #fef2f2;
+            border: 1px dashed #fca5a5;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 20px auto 10px auto;
+            display: inline-block;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        @media print {
+            @page {
+                margin: 0.5in;
+            }
+            body { 
+                background: white; 
+                color: black; 
+                padding: 0;
+                margin: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            body::before {
+                content: "";
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: 99999;
+                pointer-events: none;
+                opacity: 0.05;
+                background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='250' height='150' viewBox='0 0 250 150'><text x='30' y='100' font-family='Segoe UI, sans-serif' font-size='14' font-weight='bold' fill='%23000000' transform='rotate(-30 30 100)'>CH140 Completed Assignment</text></svg>");
+                background-repeat: repeat;
+            }
+
+            .container { 
+                box-shadow: none; 
+                padding: 0; 
+                max-width: 100%;
+                width: 100%;
+            }
+            .toolbar, .crop-controls, .file-input-wrapper, .btn-download-pdf, .validation-alert, .action-warning { 
+                display: none !important; 
+            }
+            .question-block, .sub-question-block, .summary-table tr, .student-info-block, .summary-section { 
+                page-break-inside: avoid !important; 
+                break-inside: avoid !important;
+            }
+            .max-points-tally { background: none; border: 1px solid #000; color: #000; box-shadow: none; }
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e3a8a;
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+
+        .student-info-block {
+            display: flex;
+            gap: 20px;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 30px;
+        }
+
+        .info-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-group label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #475569;
+        }
+
+        .info-group input {
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .info-group input:focus {
+            border-color: #3b82f6;
+        }
+
+        .question-block {
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .question-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .point-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+            border: 1px solid #bae6fd;
+        }
+
+        .question-text {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .sub-question-block {
+            margin-top: 15px;
+            padding-left: 15px;
+            border-left: 3px solid #cbd5e1;
+            margin-bottom: 15px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 4px;
+            background: #f1f5f9;
+            padding: 6px;
+            border-radius: 6px 6px 0 0;
+            border: 1px solid #cbd5e1;
+            border-bottom: none;
+            flex-wrap: wrap;
+        }
+
+        .toolbar button {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #334155;
+            transition: all 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #e2e8f0;
+            color: #000;
+        }
+
+        .toolbar .symbol-btn {
+            font-family: Cambria, Georgia, serif;
+            font-weight: bold;
+        }
+
+        .answer-box {
+            min-height: 90px;
+            border: 1px solid #cbd5e1;
+            border-radius: 0 0 6px 6px;
+            padding: 12px;
+            background: white;
+            outline: none;
+            font-size: 15px;
+            overflow-y: auto;
+            transition: border-color 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .answer-box:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+
+        .photo-workspace-wrapper {
+            width: 100%;
+            position: relative;
+            background: #0f172a;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px dashed #cbd5e1;
+            padding-top: 40%;
+            margin-bottom: 10px;
+            margin-top: 10px;
+        }
+
+        .photo-inner-canvas {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .file-input-wrapper {
+            position: absolute;
+            z-index: 10;
+            text-align: center;
+            color: #94a3b8;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .cropper-stage {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            cursor: move;
+        }
+
+        .cropper-image {
+            position: absolute;
+            transform-origin: center center;
+            max-width: none;
+            max-height: none;
+        }
+
+        .crop-controls {
+            display: none;
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 0 0 8px 8px;
+            color: white;
+            gap: 15px;
+            flex-direction: column;
+            margin-bottom: 25px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .control-row label { width: 80px; }
+        .control-row input[type="range"] { flex: 1; }
+
+        .btn-apply-crop {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            align-self: flex-end;
+        }
+
+        .btn-apply-crop:hover { background: #059669; }
+
+        .btn-remove-photo {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            align-self: flex-end;
+        }
+
+        .btn-remove-photo:hover { background: #b91c1c; }
+
+        .summary-section {
+            margin-top: 20px;
+            padding-top: 30px;
+            border-top: 3px solid #1e3a8a;
+        }
+
+        .summary-section h2 {
+            color: #1e3a8a;
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 14px;
+        }
+
+        .summary-table th, .summary-table td {
+            border: 1px solid #cbd5e1;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .summary-table th {
+            background: #f8fafc;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .summary-table td p {
+            margin: 0;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .summary-preview-img {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            display: block;
+        }
+
+        .btn-download-pdf {
+            background-color: #1e3a8a; 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 6px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-download-pdf:hover {
+            background-color: #2563eb;
+        }
+
+        .graph-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .graph-box {
+            border: 1px solid #cbd5e1;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+               .graph-img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 5px auto;
+        }
+    </style>
+
+      <!-- Moving the script safely outside of the style block fixes the file launch error -->
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+</head>
+
+
+<body oncontextmenu="return false;">
+
+    <div class="container">
+        <div id="validationBanner" class="validation-alert">
+            ⚠️ Attention: Please fill in your Student Name and answer all fields before converting to a PDF document.
+        </div>
+
+        <h1>Assignment 4, CH140 Fall 2026</h1>
+        
+        <div class="max-points-container">
+            <div class="max-points-tally">
+                📊 Maximum Points Available: 84 pts
+            </div>
+        </div>
+
+        <div class="student-info-block">
+            <div class="info-group">
+                <label for="studentName">Student Full Name</label>
+                <input type="text" id="studentName" placeholder="Enter full name..." autocomplete="off">
+            </div>
+        </div>
+
+        <form id="assignmentForm" onsubmit="return false;">
+            <div id="questionsContainer">
+
+                <!-- Q1 -->
+                <div class="question-block" id="block-1">
+                    <div class="question-header">
+                        <span class="point-badge">5 pts</span>
+                        <span class="question-text">1. Gaseous Fluorine reacts with gaseous hydrogen to give Hydrogen Fluoride gas, according to the reaction: F<sub>2</sub>(g) + H<sub>2</sub>(g) → 2HF(g). State which of the 4 graphs below most correctly depicts the formation of HF as a function of time. Explain the shape of the graph and your answer.</span>
+                    </div>
+                    <div class="graph-container">
+                        <div class="graph-box">
+                            <strong>Graph A</strong>
+                            <svg width="100%" height="140" viewBox="0 0 200 140" style="background:white; margin-top:5px;">
+                                <line x1="25" y1="110" x2="190" y2="110" stroke="black" stroke-width="2"/>
+                                <line x1="25" y1="15" x2="25" y2="110" stroke="black" stroke-width="2"/>
+                                <path d="M 25 110 Q 70 30 185 30" fill="none" stroke="#1e3a8a" stroke-width="2.5"/>
+                                <text x="8" y="65" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="600" transform="rotate(-90 8 65)">[HF]</text>
+                                <text x="100" y="127" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="600">Time</text>
+                            </svg>
+                        </div>
+                        <div class="graph-box">
+                            <strong>Graph B</strong>
+                            <svg width="100%" height="140" viewBox="0 0 200 140" style="background:white; margin-top:5px;">
+                                <line x1="25" y1="110" x2="190" y2="110" stroke="black" stroke-width="2"/>
+                                <line x1="25" y1="15" x2="25" y2="110" stroke="black" stroke-width="2"/>
+                                <path d="M 25 110 C 65 15, 95 15, 185 110" fill="none" stroke="#1e3a8a" stroke-width="2.5"/>
+                                <text x="8" y="65" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="600" transform="rotate(-90 8 65)">[HF]</text>
+                                <text x="100" y="127" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="600">Time</text>
+                            </svg>
+                        </div>
+                        <div class="graph-box">
+                            <strong>Graph C</strong>
+                            <svg width="100%" height="140" viewBox="0 0 200 140" style="background:white; margin-top:5px;">
+                                <line x1="25" y1="110" x2="190" y2="110" stroke="black" stroke-width="2"/>
+                                <line x1="25" y1="15" x2="25" y2="110" stroke="black" stroke-width="2"/>
+                                <path d="M 25 110 Q 140 105 180 20" fill="none" stroke="#1e3a8a" stroke-width="2.5"/>
+                                <text x="8" y="65" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="600" transform="rotate(-90 8 65)">[HF]</text>
+                                <text x="100" y="127" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="600">Time</text>
+                            </svg>
+                        </div>
+                        <div class="graph-box">
+                            <strong>Graph D</strong>
+                            <svg width="100%" height="140" viewBox="0 0 200 140" style="background:white; margin-top:5px;">
+                                <line x1="25" y1="110" x2="190" y2="110" stroke="black" stroke-width="2"/>
+                                <line x1="25" y1="15" x2="25" y2="110" stroke="black" stroke-width="2"/>
+                                <path d="M 25 35 Q 75 105 185 108" fill="none" stroke="#1e3a8a" stroke-width="2.5"/>
+                                <text x="8" y="65" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="600" transform="rotate(-90 8 65)">[HF]</text>
+                                <text x="100" y="127" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="600">Time</text>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="toolbar" id="tb-1"></div>
+                    <div id="ans-1" class="answer-box" contenteditable="true" placeholder="State your graph choice and explain the shape..."></div>
+                </div>
+
+                <!-- Q2 -->
+                <div class="question-block" id="block-2">
+                    <div class="question-header">
+                        <span class="point-badge">5 pts</span>
+                        <span class="question-text">2. You are a chemist in 1820 creating Strontium Oxide (84.56% Sr, 15.44% O). Starting with 15.00g of oxygen and excess Strontium metal, the reaction produces 46.24 g of SrO. Did you succeed in producing the correct compound? Explain why or why not using your data below. Show your work.</span>
+                    </div>
+                    <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:10px; border-radius:4px; margin-bottom:10px; font-size:14px;">
+                        <strong>Description:</strong> Oxygen consumption over time, From 15.00g to 2.59g, with 46.42 g SrO formed.
+                    </div>
+                    <div style="text-align: center; margin: 15px 0;">
+                        <svg width="100%" height="180" viewBox="0 0 300 180" style="background:#000; border-radius: 4px; border: 1px solid #cbd5e1; max-width:400px; display:block; margin:0 auto;">
+                            <line x1="40" y1="140" x2="280" y2="140" stroke="white" stroke-width="2"/>
+                            <line x1="40" y1="20" x2="40" y2="140" stroke="white" stroke-width="2"/>
+                            <path d="M 40 30 Q 100 120 280 120" fill="none" stroke="white" stroke-width="3"/>
+                            <text x="35" y="34" font-family="'Segoe UI', sans-serif" font-size="10" fill="white" text-anchor="end">15.00g</text>
+                            <text x="35" y="124" font-family="'Segoe UI', sans-serif" font-size="10" fill="white" text-anchor="end">2.59g</text>
+                            <text x="12" y="80" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="600" fill="white" transform="rotate(-90 12 80)" text-anchor="middle">Mass of O₂ (g)</text>
+                            <text x="160" y="160" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Time (s)</text>
+                        </svg>
+                    </div>
+                    <div class="toolbar" id="tb-2"></div>
+                    <div id="ans-2" class="answer-box" contenteditable="true"></div>
+                    <div id="cropperContainer-2"></div>
+                </div>
+
+                <!-- Q3 -->
+                <div class="question-block" id="block-3">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">3. A single oxygen-16 (O-16) atom weighs 2.656&times;10<sup>-26</sup> kg. Calculate the number of O-16 atoms in a 16.000 g sample of O-16. Show your work.</span>
+                    </div>
+                    <div class="toolbar" id="tb-3"></div>
+                    <div id="ans-3" class="answer-box" contenteditable="true"></div>
+                    <div id="cropperContainer-3"></div>
+                </div>
+
+                <!-- Q4 -->
+                <div class="question-block" id="block-4">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">4. Calculate the number of O-16 atoms in a 55.00 g sample of O-16. Show your work.</span>
+                    </div>
+                    <div class="toolbar" id="tb-4"></div>
+                    <div id="ans-4" class="answer-box" contenteditable="true"></div>
+                    <div id="cropperContainer-4"></div>
+                </div>
+
+                <!-- Q5 -->
+                <div class="question-block" id="block-5">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">5. Calculate the number of O-16 atoms in 5.0 ng of O-16. Show your work.</span>
+                    </div>
+                    <div class="toolbar" id="tb-5"></div>
+                    <div id="ans-5" class="answer-box" contenteditable="true"></div>
+                    <div id="cropperContainer-5"></div>
+                </div>
+
+                <!-- Q6 -->
+                <div class="question-block" id="block-6">
+                    <div class="question-header">
+                        <span class="point-badge">2 pts</span>
+                        <span class="question-text">6. Explain how Atomic Mass and Mass number differ.</span>
+                    </div>
+                    <div class="toolbar" id="tb-6"></div>
+                    <div id="ans-6" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q7 -->
+                <div class="question-block" id="block-7">
+                    <div class="question-header">
+                        <span class="point-badge">6 pts</span>
+                        <span class="question-text">7. Suppose you have a sample of Uranium that is enriched to 75% U-235 and 25% U-238.</span>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> Calculate the atomic weight of this sample.</div>
+                        <div class="toolbar" id="tb-7A"></div>
+                        <div id="ans-7A" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> Calculate the mass of 6.022&times;10<sup>23</sup> atoms of this enriched Uranium. Show your work.</div>
+                        <div class="toolbar" id="tb-7B"></div>
+                        <div id="ans-7B" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-7B"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> Calculate the number of atoms in a 76.45 g sample of this Uranium. Show your work.</div>
+                        <div class="toolbar" id="tb-7C"></div>
+                        <div id="ans-7C" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-7C"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> Calculate the number of U-235 and U-238 atoms in the 76.45 g sample. Show your work.</div>
+                        <div class="toolbar" id="tb-7D"></div>
+                        <div id="ans-7D" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-7D"></div>
+                    </div>
+                </div>
+
+                <!-- Q8 -->
+                <div class="question-block" id="block-8">
+                    <div class="question-header">
+                        <span class="point-badge">1 pt</span>
+                        <span class="question-text">8. State the mass of 6.022&times;10<sup>23</sup> natural carbon atoms.</span>
+                    </div>
+                    <div class="toolbar" id="tb-8"></div>
+                    <div id="ans-8" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q9 -->
+                <div class="question-block" id="block-9">
+                    <div class="question-header">
+                        <span class="point-badge">1 pt</span>
+                        <span class="question-text">9. State the number of atoms in 1 mole of natural carbon.</span>
+                    </div>
+                    <div class="toolbar" id="tb-9"></div>
+                    <div id="ans-9" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q10 -->
+                <div class="question-block" id="block-10">
+                    <div class="question-header">
+                        <span class="point-badge">1 pt</span>
+                        <span class="question-text">10. State the number of atoms in 12.01 g of natural Carbon.</span>
+                    </div>
+                    <div class="toolbar" id="tb-10"></div>
+                    <div id="ans-10" class="answer-box" contenteditable="true"></div>
+                </div>
+
+                <!-- Q11 -->
+                <div class="question-block" id="block-11">
+                    <div class="question-header">
+                        <span class="point-badge">3 pts</span>
+                        <span class="question-text">11. For the natural element Beryllium:</span>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> Draw the diagram (as shown in class) relating moles, atomic mass and number of atoms.</div>
+                        <div id="cropperContainer-11A"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> From the diagram calculate the ratio of each pair of quantities (g/mol, atoms/mol, atoms/g). Show your work.</div>
+                        <div class="toolbar" id="tb-11B"></div>
+                        <div id="ans-11B" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-11B"></div>
+                    </div>
+                </div>
+
+                <!-- Q12 -->
+                <div class="question-block" id="block-12">
+                    <div class="question-header">
+                        <span class="point-badge">4 pts</span>
+                        <span class="question-text">12. Repeat question 11, except with 36.56 g of the natural element Beryllium.</span>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> Draw the diagram (as shown in class) relating moles, atomic mass and number of atoms. Show your work.</div>
+                        <div id="cropperContainer-12A"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> From the diagram calculate the ratio of each pair of quantities (g/mol, atoms/mol, atoms/g). Show your work.</div>
+                        <div class="toolbar" id="tb-12B"></div>
+                        <div id="ans-12B" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-12B"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> Comment on how this diagram compares with the diagram presented in question 11A and explain the result.</div>
+                        <div class="toolbar" id="tb-12C"></div>
+                        <div id="ans-12C" class="answer-box" contenteditable="true"></div>
+                    </div>
+                </div>
+
+                <!-- Q13 -->
+                <div class="question-block" id="block-13">
+                    <div class="question-header">
+                        <span class="point-badge">8 pts</span>
+                        <span class="question-text">13. Calculate the number of moles of and the mass of 1.78&times;10<sup>30</sup> atoms of each of the following elements. Show your work.</span>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> H</div>
+                        <div class="toolbar" id="tb-13A"></div>
+                        <div id="ans-13A" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-13A"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> B</div>
+                        <div class="toolbar" id="tb-13B"></div>
+                        <div id="ans-13B" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-13B"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> P</div>
+                        <div class="toolbar" id="tb-13C"></div>
+                        <div id="ans-13C" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-13C"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> Fe</div>
+                        <div class="toolbar" id="tb-13D"></div>
+                        <div id="ans-13D" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-13D"></div>
+                    </div>
+                </div>
+
+                <!-- Q14 -->
+                <div class="question-block" id="block-14">
+                    <div class="question-header">
+                        <span class="point-badge">8 pts</span>
+                        <span class="question-text">14. Calculate the mass and number of atoms of 5.87&times;10<sup>-3</sup> mol of each of the following elements. Show your work.</span>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> Li</div>
+                        <div class="toolbar" id="tb-14A"></div>
+                        <div id="ans-14A" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-14A"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> O</div>
+                        <div class="toolbar" id="tb-14B"></div>
+                        <div id="ans-14B" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-14B"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> Ar</div>
+                        <div class="toolbar" id="tb-14C"></div>
+                        <div id="ans-14C" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-14C"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> Cd</div>
+                        <div class="toolbar" id="tb-14D"></div>
+                        <div id="ans-14D" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-14D"></div>
+                    </div>
+                </div>
+
+                <!-- Q15 -->
+                <div class="question-block" id="block-15">
+                    <div class="question-header">
+                        <span class="point-badge">8 pts</span>
+                        <span class="question-text">15. Calculate the number of moles and number of atoms in 11.65 g of each of the following elements. Show your work.</span>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> Na</div>
+                        <div class="toolbar" id="tb-15A"></div>
+                        <div id="ans-15A" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-15A"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> Sc</div>
+                        <div class="toolbar" id="tb-15B"></div>
+                        <div id="ans-15B" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-15B"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> Se</div>
+                        <div class="toolbar" id="tb-15C"></div>
+                        <div id="ans-15C" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-15C"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> Bi</div>
+                        <div class="toolbar" id="tb-15D"></div>
+                        <div id="ans-15D" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-15D"></div>
+                    </div>
+                </div>
+
+                <!-- Q16 -->
+                <div class="question-block" id="block-16">
+                    <div class="question-header">
+                        <span class="point-badge">4 pts</span>
+                        <span class="question-text">16. For 500.61 g of Chromium Calculate:</span>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> The number of moles of chromium in this sample. Show your work.</div>
+                        <div class="toolbar" id="tb-16A"></div>
+                        <div id="ans-16A" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-16A"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> The number of chromium atoms in this sample. Show your work.</div>
+                        <div class="toolbar" id="tb-16B"></div>
+                        <div id="ans-16B" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-16B"></div>
+                    </div>
+                </div>
+
+                <!-- Q17 -->
+                <div class="question-block" id="block-17">
+                    <div class="question-header">
+                        <span class="point-badge">4 pts</span>
+                        <span class="question-text">17. Calculate:</span>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> The number of grams of Al in a 5.00 g sample of the metal. Show your work.</div>
+                        <div class="toolbar" id="tb-17A"></div>
+                        <div id="ans-17A" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-17A"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> The number of Al atoms in the sample. Show your work.</div>
+                        <div class="toolbar" id="tb-17B"></div>
+                        <div id="ans-17B" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-17B"></div>
+                    </div>
+                </div>
+
+                <!-- Q18 -->
+                <div class="question-block" id="block-18">
+                    <div class="question-header">
+                        <span class="point-badge">4 pts</span>
+                        <span class="question-text">18. A metal sample contains 1.62&times;10<sup>-3</sup> mol of Pt.</span>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> Calculate the mass of the sample in grams. Show your work.</div>
+                        <div class="toolbar" id="tb-18A"></div>
+                        <div id="ans-18A" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-18A"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> Calculate the number of atoms of Pt in the sample. Show your work.</div>
+                        <div class="toolbar" id="tb-18B"></div>
+                        <div id="ans-18B" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-18B"></div>
+                    </div>
+                </div>
+
+                <!-- Q19 -->
+                <div class="question-block" id="block-19">
+                    <div class="question-header">
+                        <span class="point-badge">6 pts</span>
+                        <span class="question-text">19. A 100 g metal block is an alloy of 10% Copper and 90% Aluminum by mass. Calculate:</span>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> The mass of each metal in the block. Show your work.</div>
+                        <div class="toolbar" id="tb-19A"></div>
+                        <div id="ans-19A" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-19A"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> The moles of each metal in the block. Show your work.</div>
+                        <div class="toolbar" id="tb-19B"></div>
+                        <div id="ans-19B" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-19B"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> The numbers of each metal’s atoms in the block. Show your work.</div>
+                        <div class="toolbar" id="tb-19C"></div>
+                        <div id="ans-19C" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-19C"></div>
+                    </div>
+                </div>
+
+                <!-- Q20 -->
+                <div class="question-block" id="block-20">
+                    <div class="question-header">
+                        <span class="point-badge">8 pts</span>
+                        <span class="question-text">20. A gas cylinder contains 440 g of He and 973 g of Xe. Calculate:</span>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> The number of moles of each gas in the cylinder. Show your work.</div>
+                        <div class="toolbar" id="tb-20A"></div>
+                        <div id="ans-20A" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-20A"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> The number of atoms of each gas in the cylinder. Show your work.</div>
+                        <div class="toolbar" id="tb-20B"></div>
+                        <div id="ans-20B" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-20B"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> The TOTAL number of moles of all gases in the cylinder. Show your work.</div>
+                        <div class="toolbar" id="tb-20C"></div>
+                        <div id="ans-20C" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-20C"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> The TOTAL number of atoms of all gases in the cylinder. Show your work.</div>
+                        <div class="toolbar" id="tb-20D"></div>
+                        <div id="ans-20D" class="answer-box" contenteditable="true"></div>
+                        <div id="cropperContainer-20D"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>E.</strong> State which element has the greatest number of moles of atoms in this mixture.</div>
+                        <div class="toolbar" id="tb-20E"></div>
+                        <div id="ans-20E" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>F.</strong> State which element has the greatest number of atoms in this mixture.</div>
+                        <div class="toolbar" id="tb-20F"></div>
+                        <div id="ans-20F" class="answer-box" contenteditable="true"></div>
+                    </div>
+                    <div class="sub-question-block">
+                        <div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>G.</strong> Explain these results.</div>
+                        <div class="toolbar" id="tb-20G"></div>
+                        <div id="ans-20G" class="answer-box" contenteditable="true"></div>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+
+        <div class="summary-section">
+            <h2>Answers</h2>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th style="width: 180px;">Questions</th>
+                        <th>Answers</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryTableBody">
+                    <!-- Dynamic Summary Injector via JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div style="text-align: center;">
+            <div class="action-warning">
+                ⚠️ Once the print button is activated no further editing of the document can be performed.
+            </div>
+            <br>
+            <button type="button" class="btn-download-pdf" onclick="validateAndPrint();">
+                💾 Convert & Download Document PDF
+            </button>
+        </div>
+    </div>
+
+    <script>
+
+	// --- Global HEIC Drop-In Interceptor ---
+document.addEventListener('change', function(e) {
+    // Check if the modified element is a file input field
+    if (e.target && e.target.type === 'file' && e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        
+        // If the file extension indicates it's a HEIC file
+        if (/\.(heic|heif)$/i.test(file.name)) {
+            e.stopImmediatePropagation(); // Temporarily stop original code from running
+            
+            const originalInput = e.target;
+            const parentLabel = originalInput.closest('.file-input-wrapper');
+            const statusText = parentLabel ? parentLabel.querySelector('p') : null;
+            const fallbackText = statusText ? statusText.innerText : '';
+            
+            if (statusText) statusText.innerText = "🔄 Converting HEIC image, please wait...";
+
+            // Convert the HEIC file into a standard JPEG blob client-side
+            heic2any({
+                blob: file,
+                toType: "image/jpeg",
+                quality: 0.85
+            })
+            .then(function(convertedBlob) {
+                if (statusText) statusText.innerText = fallbackText;
+                
+                // Create a standard file object from the new JPEG data stream
+                const standardFile = new File([convertedBlob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), { type: "image/jpeg" });
+                
+                // Bundle the new JPEG file into a standard data transfer container
+                const dataContainer = new DataTransfer();
+                dataContainer.items.add(standardFile);
+                originalInput.files = dataContainer.files;
+                
+                // Re-trigger the original change event using our standard JPEG file wrapper
+                const forcedEvent = new Event('change', { bubbles: true });
+                originalInput.dispatchEvent(forcedEvent);
+            })
+            .catch(function(err) {
+                if (statusText) statusText.innerText = fallbackText;
+                alert("Could not process HEIC/HEIF file. Please select a JPEG or PNG, or try the HEIC file again.");
+                originalInput.value = ""; // Safely reset selection on error
+            });
+        }
+    }
+}, true); // The 'true' flag ensures this runs BEFORE your original upload code triggers
+
+        document.addEventListener('keydown', function(e) {
+            // Check if the target is an editable element or input field
+            const isEditable = e.target.matches('input, [contenteditable="true"]');
+            
+            // If the user presses capital 'I' (Shift + I or KeyI with Caps Lock) inside an editable container, allow it completely
+            if (e.key === 'I' && isEditable) {
+                return true;
+            }
+
+            if ((e.ctrlKey || e.metaKey) && e.keyCode === 67) { e.preventDefault(); return false; }
+            if ((e.ctrlKey || e.metaKey) && e.keyCode === 80) { e.preventDefault(); return false; }
+            if ((e.ctrlKey || e.metaKey) && e.keyCode === 83) { e.preventDefault(); return false; }
+            if (e.keyCode === 123 || ((e.ctrlKey || e.shiftKey || e.metaKey) && e.keyCode === 73)) { e.preventDefault(); return false; }
+        });
+
+        const customSymbols = ['→', '⇌', '°C', 'Δ', 'π', '±', '²', '³', '⁻', '⁺', '×', '·', 'µ', '⁻¹', '⁻²', '⁻³'];
+        
+        const textAnswerIds = [
+            "1", "2", "3", "4", "5", "6", 
+            "7A", "7B", "7C", "7D", "8", "9", "10", "11B",
+            "12B", "12C",
+            "13A", "13B", "13C", "13D",
+            "14A", "14B", "14C", "14D",
+            "15A", "15B", "15C", "15D",
+            "16A", "16B", "17A", "17B", "18A", "18B",
+            "19A", "19B", "19C",
+            "20A", "20B", "20C", "20D", "20E", "20F", "20G"
+        ];
+
+                        const workPhotoKeys = ["2", "3", "4", "5", "7B", "7C", "7D", "11A", "11B", "12A", "12B", "13A", "13B", "13C", "13D", "14A", "14B", "14C", "14D", "15A", "15B", "15C", "15D", "16A", "16B", "17A", "17B", "18A", "18B", "19A", "19B", "19C", "20A", "20B", "20C", "20D"];
+
+
+
+        const summaryBody = document.getElementById('summaryTableBody');
+        
+        ["1", "2", "3", "4", "5", "6", "8", "9", "10"].forEach(q => {
+            let row = `<tr><td style="font-weight:600;">Question ${q}</td><td><div id="sum-${q}"></div><div id="sum-photo-${q}"></div></td></tr>`;
+            summaryBody.innerHTML += row;
+        });
+
+        [[ "7", ["A", "B", "C", "D"]], ["11", ["A", "B"]], ["12", ["A", "B", "C"]], ["13", ["A", "B", "C", "D"]], ["14", ["A", "B", "C", "D"]], ["15", ["A", "B", "C", "D"]], ["16", ["A", "B"]], ["17", ["A", "B"]], ["18", ["A", "B"]], ["19", ["A", "B", "C"]], ["20", ["A", "B", "C", "D", "E", "F", "G"]]].forEach(item => {
+            let qNum = item[0];
+            let subKeys = item[1];
+            let subRows = `<tr><td style="font-weight:600;">Question ${qNum}</td><td>`;
+            subKeys.forEach(sk => {
+                subRows += `<div style="margin-bottom:8px;"><strong>Sub-question ${sk}:</strong> <span id="sum-${qNum}${sk}"></span><div id="sum-photo-${qNum}${sk}"></div></div>`;
+            });
+            subRows += `</td></tr>`;
+            summaryBody.innerHTML += subRows;
+        });
+
+        textAnswerIds.forEach(id => {
+            const tb = document.getElementById(`tb-${id}`);
+            if (!tb) return;
+
+            const btnSup = document.createElement('button');
+            btnSup.type = 'button';
+            btnSup.innerHTML = 'x<sup>2</sup>';
+            btnSup.onclick = () => execCmd('superscript');
+            tb.appendChild(btnSup);
+
+            const btnSub = document.createElement('button');
+            btnSub.type = 'button';
+            btnSub.innerHTML = 'x<sub>2</sub>';
+            btnSub.onclick = () => execCmd('subscript');
+            tb.appendChild(btnSub);
+
+            customSymbols.forEach(sym => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'symbol-btn';
+                btn.innerText = sym;
+                btn.onclick = () => injectText(sym, `ans-${id}`);
+                tb.appendChild(btn);
+            });
+
+            const answerBox = document.getElementById(`ans-${id}`);
+            if (answerBox) {
+                answerBox.oninput = () => {
+                    const targetSummaryCell = document.getElementById(`sum-${id}`);
+                    if (targetSummaryCell) {
+                        targetSummaryCell.innerHTML = answerBox.innerHTML;
+                    }
+                };
+            }
+        });
+
+        document.execCommand("defaultParagraphSeparator", false, "p");
+
+        function execCmd(command) {
+            document.execCommand(command, false, null);
+        }
+
+        function injectText(text, targetId) {
+            const box = document.getElementById(targetId);
+            if (!box) return;
+            box.focus();
+            
+            const sel = window.getSelection();
+            if (sel.getRangeAt && sel.rangeCount) {
+                const range = sel.getRangeAt(0);
+                range.deleteContents();
+                const textNode = document.createTextNode(text);
+                range.insertNode(textNode);
+                
+                range.setStartAfter(textNode);
+                range.setEndAfter(textNode);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+            box.oninput();
+        }
+
+        let imgStates = {};
+
+        function createPhotoCropperEngine(parentId, questionKey) {
+            const parent = document.getElementById(parentId);
+            if (!parent) return;
+
+            imgStates[questionKey] = { imgObj: null, base64Raw: null, scale: 1, rot: 0, posX: 0, posY: 0, isDragging: false, startX: 0, startY: 0 };
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'photo-workspace-wrapper';
+
+            const innerCanvas = document.createElement('div');
+            innerCanvas.className = 'photo-inner-canvas';
+
+            const fileWrapper = document.createElement('div');
+            fileWrapper.className = 'file-input-wrapper';
+            fileWrapper.innerHTML = `
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:6px; color:#94a3b8;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <p style="margin:0; font-size:13px; font-weight:500;">Drag & Drop "Show Your Work" Calculation Image or Click to Browse</p>
+                <input type="file" accept="image/*,.heic,.heif" id="file-${questionKey}">
+            `;
+
+            const stage = document.createElement('div');
+            stage.className = 'cropper-stage';
+            stage.id = `stage-${questionKey}`;
+
+            const img = document.createElement('img');
+            img.className = 'cropper-image';
+            img.id = `img-${questionKey}`;
+            img.alt = 'Calculation Sheet Workspace';
+            stage.appendChild(img);
+
+            innerCanvas.appendChild(fileWrapper);
+            innerCanvas.appendChild(stage);
+            wrapper.appendChild(innerCanvas);
+
+            const controls = document.createElement('div');
+            controls.className = 'crop-controls';
+            controls.innerHTML = `
+                <div class="control-row">
+                    <label>Scale Zoom</label>
+                    <input type="range" id="zoom-${questionKey}" min="0.1" max="3" step="0.01" value="1">
+                </div>
+                <div class="control-row">
+                    <label>Rotation</label>
+                    <input type="range" id="rotate-${questionKey}" min="0" max="360" step="1" value="0">
+                </div>
+                <button type="button" class="btn-remove-photo" id="remove-${questionKey}">Remove Photo</button>
+            `;
+
+            parent.appendChild(wrapper);
+            parent.appendChild(controls);
+
+            const fileInput = fileWrapper.querySelector('input[type="file"]');
+            const zoomSlider = controls.querySelector('input[id^="zoom-"]');
+            const rotateSlider = controls.querySelector('input[id^="rotate-"]');
+            const removeBtn = controls.querySelector('.btn-remove-photo');
+
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        imgStates[questionKey].base64Raw = event.target.result;
+                        img.src = event.target.result;
+                        img.onload = function() {
+                            fileWrapper.style.display = 'none';
+                            stage.style.display = 'block';
+                            controls.style.display = 'flex';
+                            
+                            imgStates[questionKey].scale = 1;
+                            imgStates[questionKey].rot = 0;
+                            imgStates[questionKey].posX = (stage.clientWidth - img.naturalWidth) / 2;
+                            imgStates[questionKey].posY = (stage.clientHeight - img.naturalHeight) / 2;
+                            
+                            zoomSlider.value = 1;
+                            rotateSlider.value = 0;
+                            updateImageTransforms(questionKey);
+                            syncPhotoToSummary(questionKey);
+                        };
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+
+            stage.addEventListener('mousedown', (e) => {
+                imgStates[questionKey].isDragging = true;
+                imgStates[questionKey].startX = e.clientX - imgStates[questionKey].posX;
+                imgStates[questionKey].startY = e.clientY - imgStates[questionKey].posY;
+                stage.style.cursor = 'grabbing';
+            });
+
+            window.addEventListener('mouseup', () => {
+                imgStates[questionKey].isDragging = false;
+                stage.style.cursor = 'move';
+            });
+
+            stage.addEventListener('mousemove', (e) => {
+                if (!imgStates[questionKey].isDragging) return;
+                imgStates[questionKey].posX = e.clientX - imgStates[questionKey].startX;
+                imgStates[questionKey].posY = e.clientY - imgStates[questionKey].startY;
+                updateImageTransforms(questionKey);
+            });
+
+            zoomSlider.addEventListener('input', (e) => {
+                imgStates[questionKey].scale = parseFloat(e.target.value);
+                updateImageTransforms(questionKey);
+                syncPhotoToSummary(questionKey);
+            });
+
+            rotateSlider.addEventListener('input', (e) => {
+                imgStates[questionKey].rot = parseInt(e.target.value);
+                updateImageTransforms(questionKey);
+                syncPhotoToSummary(questionKey);
+            });
+
+            removeBtn.addEventListener('click', () => {
+                removePhoto(questionKey);
+            });
+        }
+
+        function updateImageTransforms(key) {
+            const img = document.getElementById(`img-${key}`);
+            if (img) {
+                img.style.transform = `translate(${imgStates[key].posX}px, ${imgStates[key].posY}px) scale(${imgStates[key].scale}) rotate(${imgStates[key].rot}deg)`;
+            }
+        }
+
+        function syncPhotoToSummary(key) {
+            const state = imgStates[key];
+            const stage = document.getElementById(`stage-${key}`);
+            const img = document.getElementById(`img-${key}`);
+            const targetContainer = document.getElementById(`sum-photo-${key}`);
+
+            if (!state || !stage || !img || !targetContainer || !img.naturalWidth || !img.naturalHeight) return;
+
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = Math.max(1, stage.clientWidth);
+            exportCanvas.height = Math.max(1, stage.clientHeight);
+            const ctx = exportCanvas.getContext('2d');
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+
+            ctx.save();
+            ctx.translate(
+                state.posX + img.naturalWidth / 2,
+                state.posY + img.naturalHeight / 2
+            );
+            ctx.scale(state.scale, state.scale);
+            ctx.rotate((state.rot * Math.PI) / 180);
+            ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+            ctx.restore();
+
+            const previewBase64 = exportCanvas.toDataURL('image/jpeg', 0.85);
+            targetContainer.innerHTML = `
+                <img src="${previewBase64}" class="summary-preview-img" alt="Calculation work photo">
+            `;
+        }
+
+        function removePhoto(key) {
+            const state = imgStates[key];
+            const fileInput = document.getElementById(`file-${key}`);
+            const stage = document.getElementById(`stage-${key}`);
+            const img = document.getElementById(`img-${key}`);
+            const workspace = stage ? stage.closest('.photo-workspace-wrapper') : null;
+            const fileWrapper = workspace ? workspace.querySelector('.file-input-wrapper') : null;
+            const controls = workspace ? workspace.nextElementSibling : null;
+            const zoomSlider = document.getElementById(`zoom-${key}`);
+            const rotateSlider = document.getElementById(`rotate-${key}`);
+            const targetContainer = document.getElementById(`sum-photo-${key}`);
+
+            if (fileInput) fileInput.value = '';
+            if (img) {
+                img.removeAttribute('src');
+                img.style.transform = '';
+            }
+            if (stage) stage.style.display = 'none';
+            if (fileWrapper) fileWrapper.style.display = 'flex';
+            if (controls) controls.style.display = 'none';
+            if (zoomSlider) zoomSlider.value = 1;
+            if (rotateSlider) rotateSlider.value = 0;
+
+            if (state) {
+                state.imgObj = null;
+                state.base64Raw = null;
+                state.scale = 1;
+                state.rot = 0;
+                state.posX = 0;
+                state.posY = 0;
+                state.isDragging = false;
+            }
+
+            if (targetContainer) targetContainer.innerHTML = '';
+        }
+
+        workPhotoKeys.forEach(key => {
+            createPhotoCropperEngine(`cropperContainer-${key}`, key);
+        });
+
+        function validateAndPrint() {
+            const banner = document.getElementById('validationBanner');
+            const studentName = document.getElementById('studentName').value.trim();
+
+            // Only text-answer boxes are required for printing.
+            // Photo boxes are intentionally optional.
+            const answerBoxes = textAnswerIds
+                .map(id => document.getElementById(`ans-${id}`))
+                .filter(Boolean);
+
+            let allFilled = Boolean(studentName);
+
+            answerBoxes.forEach(box => {
+                if (!box.textContent.trim()) {
+                    allFilled = false;
+                }
+            });
+
+            if (!allFilled) {
+                banner.style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                banner.style.display = 'none';
+                window.print();
+
+                setTimeout(() => {
+                    document.getElementById('studentName').disabled = true;
+                    answerBoxes.forEach(box => {
+                        box.setAttribute('contenteditable', 'false');
+                    });
+                    document.querySelectorAll('.toolbar').forEach(tb => tb.style.display = 'none');
+                    document.querySelectorAll('.crop-controls').forEach(ctrl => ctrl.style.display = 'none');
+                    document.querySelectorAll('.file-input-wrapper').forEach(fw => fw.style.display = 'none');
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>
