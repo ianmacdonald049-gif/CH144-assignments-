@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assignment 5, CH140 Fall 2026</title>
+<style>
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            box-sizing: border-box;
+        }
+        
+        input[type="text"], [contenteditable="true"], button, select, input[type="range"] {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .validation-alert {
+            display: none;
+            background-color: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 15px;
+            text-align: center;
+        }
+
+        .max-points-container {
+            display: flex;
+            justify-content: center;
+            margin-top: -15px;
+            margin-bottom: 30px;
+        }
+
+        .max-points-tally {
+            background-color: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-warning {
+            color: #dc2626;
+            background-color: #fef2f2;
+            border: 1px dashed #fca5a5;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 20px auto 10px auto;
+            display: inline-block;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        @media print {
+            @page {
+                margin: 0.5in;
+            }
+            body { 
+                background: white; 
+                color: black; 
+                padding: 0;
+                margin: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            body::before {
+                content: "";
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: 99999;
+                pointer-events: none;
+                opacity: 0.05;
+                background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='250' height='150' viewBox='0 0 250 150'><text x='30' y='100' font-family='Segoe UI, sans-serif' font-size='14' font-weight='bold' fill='%23000000' transform='rotate(-30 30 100)'>CH140 Completed Assignment</text></svg>");
+                background-repeat: repeat;
+            }
+
+            .container { 
+                box-shadow: none; 
+                padding: 0; 
+                max-width: 100%;
+                width: 100%;
+            }
+            .toolbar, .crop-controls, .file-input-wrapper, .btn-download-pdf, .validation-alert, .action-warning { 
+                display: none !important; 
+            }
+            .question-block, .sub-question-block, .summary-table tr, .student-info-block, .summary-section { 
+                page-break-inside: avoid !important; 
+                break-inside: avoid !important;
+            }
+            .max-points-tally { background: none; border: 1px solid #000; color: #000; box-shadow: none; }
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e3a8a;
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+
+        .student-info-block {
+            display: flex;
+            gap: 20px;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 30px;
+        }
+
+        .info-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-group label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #475569;
+        }
+
+        .info-group input {
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .info-group input:focus {
+            border-color: #3b82f6;
+        }
+
+        .question-block {
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .question-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .point-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+            border: 1px solid #bae6fd;
+        }
+
+        .question-text {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .sub-question-block {
+            margin-top: 15px;
+            padding-left: 15px;
+            border-left: 3px solid #cbd5e1;
+            margin-bottom: 15px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 4px;
+            background: #f1f5f9;
+            padding: 6px;
+            border-radius: 6px 6px 0 0;
+            border: 1px solid #cbd5e1;
+            border-bottom: none;
+            flex-wrap: wrap;
+        }
+
+        .toolbar button {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #334155;
+            transition: all 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #e2e8f0;
+            color: #000;
+        }
+
+        .toolbar .symbol-btn {
+            font-family: Cambria, Georgia, serif;
+            font-weight: bold;
+        }
+
+        .answer-box {
+            min-height: 90px;
+            border: 1px solid #cbd5e1;
+            border-radius: 0 0 6px 6px;
+            padding: 12px;
+            background: white;
+            outline: none;
+            font-size: 15px;
+            overflow-y: auto;
+            transition: border-color 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .answer-box:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+
+        .photo-workspace-wrapper {
+            width: 100%;
+            position: relative;
+            background: #0f172a;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px dashed #cbd5e1;
+            padding-top: 40%;
+            margin-bottom: 10px;
+            margin-top: 10px;
+        }
+
+        .photo-inner-canvas {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .file-input-wrapper {
+            position: absolute;
+            z-index: 10;
+            text-align: center;
+            color: #94a3b8;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .cropper-stage {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            cursor: move;
+        }
+
+        .cropper-image {
+            position: absolute;
+            transform-origin: center center;
+            max-width: none;
+            max-height: none;
+        }
+
+        .crop-controls {
+            display: none;
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 0 0 8px 8px;
+            color: white;
+            gap: 15px;
+            flex-direction: column;
+            margin-bottom: 25px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .control-row label { width: 80px; }
+        .control-row input[type="range"] { flex: 1; }
+
+        .btn-apply-crop {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            align-self: flex-end;
+        }
+
+        .btn-apply-crop:hover { background: #059669; }
+
+        .btn-remove-photo {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            align-self: flex-end;
+        }
+
+        .btn-remove-photo:hover { background: #b91c1c; }
+
+        .summary-section {
+            margin-top: 20px;
+            padding-top: 30px;
+            border-top: 3px solid #1e3a8a;
+        }
+
+        .summary-section h2 {
+            color: #1e3a8a;
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 14px;
+        }
+
+        .summary-table th, .summary-table td {
+            border: 1px solid #cbd5e1;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .summary-table th {
+            background: #f8fafc;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .summary-table td p {
+            margin: 0;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .source-structure-images {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 18px;
+            margin: 12px 0 18px 0;
+        }
+        .source-structure-image {
+            display: block;
+            width: auto;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .summary-preview-img {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            display: block;
+        }
+
+        .btn-download-pdf {
+            background-color: #1e3a8a; 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 6px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-download-pdf:hover {
+            background-color: #2563eb;
+        }
+
+        .graph-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .graph-box {
+            border: 1px solid #cbd5e1;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+               .graph-img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 5px auto;
+        }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+</head>
+
+<body oncontextmenu="return false;">
+<div class="container">
+<div id="validationBanner" class="validation-alert">
+⚠️ Attention: Please fill in your Student Name and answer all fields before converting to a PDF document.
+</div>
+<h1>Assignment 5 Ch140 Fall 2026</h1>
+<div class="max-points-container"><div class="max-points-tally">📊 Maximum Points Available: 138 pts</div></div>
+<div class="student-info-block">
+<div class="info-group"><label for="studentName">Student Full Name</label><input type="text" id="studentName" placeholder="Enter full name..." autocomplete="off"></div>
+</div>
+<form id="assignmentForm" onsubmit="return false;">
+<div id="questionsContainer">
+<div class="question-block" id="block-1">
+<div class="question-header">
+<span class="point-badge">10 pts</span>
+<span class="question-text">1. State which of the following are compounds and which are elements</span>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> Xe</div>
+<div class="toolbar" id="tb-1A"></div>
+<div id="ans-1A" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> NO<sub>2</sub></div>
+<div class="toolbar" id="tb-1B"></div>
+<div id="ans-1B" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> Cr</div>
+<div class="toolbar" id="tb-1C"></div>
+<div id="ans-1C" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> O<sub>2</sub></div>
+<div class="toolbar" id="tb-1D"></div>
+<div id="ans-1D" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>E.</strong> Cl</div>
+<div class="toolbar" id="tb-1E"></div>
+<div id="ans-1E" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>F.</strong> C<sub>2</sub>H<sub>6</sub>S</div>
+<div class="toolbar" id="tb-1F"></div>
+<div id="ans-1F" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>G.</strong> H<sub>2</sub>CO<sub>3</sub></div>
+<div class="toolbar" id="tb-1G"></div>
+<div id="ans-1G" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>H.</strong> Br<sub>2</sub></div>
+<div class="toolbar" id="tb-1H"></div>
+<div id="ans-1H" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>I.</strong> B<sub>10</sub></div>
+<div class="toolbar" id="tb-1I"></div>
+<div id="ans-1I" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>J.</strong> As</div>
+<div class="toolbar" id="tb-1J"></div>
+<div id="ans-1J" class="answer-box" contenteditable="true"></div>
+</div>
+</div>
+<div class="question-block" id="block-2">
+<div class="question-header">
+<span class="point-badge">10 pts</span>
+<span class="question-text">2. State The number of each element’s atoms in the following compounds</span>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> XeF<sub>6</sub></div>
+<div class="toolbar" id="tb-2A"></div>
+<div id="ans-2A" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> HNO<sub>3</sub></div>
+<div class="toolbar" id="tb-2B"></div>
+<div id="ans-2B" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> ZnCl<sub>2</sub></div>
+<div class="toolbar" id="tb-2C"></div>
+<div id="ans-2C" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> O<sub>3</sub></div>
+<div class="toolbar" id="tb-2D"></div>
+<div id="ans-2D" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>E.</strong> CCl<sub>2</sub>Br<sub>2</sub></div>
+<div class="toolbar" id="tb-2E"></div>
+<div id="ans-2E" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>F.</strong> C<sub>2</sub>H<sub>6</sub>S</div>
+<div class="toolbar" id="tb-2F"></div>
+<div id="ans-2F" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>G.</strong> H<sub>2</sub>CO<sub>3</sub></div>
+<div class="toolbar" id="tb-2G"></div>
+<div id="ans-2G" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>H.</strong> I<sub>2</sub></div>
+<div class="toolbar" id="tb-2H"></div>
+<div id="ans-2H" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>I.</strong> B<sub>10</sub></div>
+<div class="toolbar" id="tb-2I"></div>
+<div id="ans-2I" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>J.</strong> AsO<sub>3</sub></div>
+<div class="toolbar" id="tb-2J"></div>
+<div id="ans-2J" class="answer-box" contenteditable="true"></div>
+</div>
+</div>
+<div class="question-block" id="block-3">
+<div class="question-header">
+
+<span class="question-text">3. State whether each atom is an ion or a neutral atom. State the number of protons and electrons in the atom. State the overall charge of the atom and whether it is a Cation, Anion or neither.</span>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> He<sup>+2</sup></div>
+<div class="toolbar" id="tb-3A"></div>
+<div id="ans-3A" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> H</div>
+<div class="toolbar" id="tb-3B"></div>
+<div id="ans-3B" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> Cr<sup>+6</sup></div>
+<div class="toolbar" id="tb-3C"></div>
+<div id="ans-3C" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> O<sup>-1</sup></div>
+<div class="toolbar" id="tb-3D"></div>
+<div id="ans-3D" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>E.</strong> Br</div>
+<div class="toolbar" id="tb-3E"></div>
+<div id="ans-3E" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>F.</strong> C</div>
+<div class="toolbar" id="tb-3F"></div>
+<div id="ans-3F" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>G.</strong> Na<sup>+1</sup></div>
+<div class="toolbar" id="tb-3G"></div>
+<div id="ans-3G" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>H.</strong> Pb<sup>+2</sup></div>
+<div class="toolbar" id="tb-3H"></div>
+<div id="ans-3H" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>I.</strong> S<sup>-2</sup></div>
+<div class="toolbar" id="tb-3I"></div>
+<div id="ans-3I" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>J.</strong> N<sup>-3</sup></div>
+<div class="toolbar" id="tb-3J"></div>
+<div id="ans-3J" class="answer-box" contenteditable="true"></div>
+</div>
+</div>
+<div class="question-block" id="block-4">
+<div class="question-header">
+<span class="point-badge">10 pts</span>
+<span class="question-text">4. Electronegativity is described as depending on an element’s position on the periodic table. Explain what electronegativity is and explain the mechanism by which it arises. Detail the three factors that influence electronegativity in an individual element.</span>
+</div>
+<div class="toolbar" id="tb-4"></div>
+<div id="ans-4" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="question-block" id="block-5">
+<div class="question-header">
+<span class="point-badge">5 pts</span>
+<span class="question-text">5. Describe the electronegativity trends in the periodic table.</span>
+</div>
+<div class="toolbar" id="tb-5"></div>
+<div id="ans-5" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="question-block" id="block-6">
+<div class="question-header">
+<span class="point-badge">5 pts</span>
+<span class="question-text">6. Explain (in terms of the factors discussed in question 4) why Mg is less electronegative than O and more electronegative than Ba.</span>
+</div>
+<div class="toolbar" id="tb-6"></div>
+<div id="ans-6" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="question-block" id="block-7">
+<div class="question-header">
+<span class="point-badge">8 pts</span>
+<span class="question-text">7. For each bond in the following compounds calculate the Pauling electronegativity difference between the two atoms and state whether the bond is ionic, covalent or both. Show your calculations.</span>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> K<sub>2</sub>S</div>
+<div class="toolbar" id="tb-7A"></div>
+<div id="ans-7A" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> NI<sub>3</sub></div>
+<div class="toolbar" id="tb-7B"></div>
+<div id="ans-7B" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> ICl (Iodine Monochloride)</div>
+<div class="toolbar" id="tb-7C"></div>
+<div id="ans-7C" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> BaF<sub>2</sub></div>
+<div class="toolbar" id="tb-7D"></div>
+<div id="ans-7D" class="answer-box" contenteditable="true"></div>
+</div>
+<div id="cropperContainer-7"></div>
+</div>
+<div class="question-block" id="block-8">
+<div class="question-header">
+<span class="point-badge">10 pts</span>
+<span class="question-text">8. For the following compounds calculate the electronegativity difference. Comment on the trend of these compounds and explain how this follows the electronegativity trends for the periodic table. Show your calculations.</span>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>E.</strong> HCl</div>
+<div class="toolbar" id="tb-8E"></div>
+<div id="ans-8E" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>F.</strong> NaCl</div>
+<div class="toolbar" id="tb-8F"></div>
+<div id="ans-8F" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>G.</strong> RbCl</div>
+<div class="toolbar" id="tb-8G"></div>
+<div id="ans-8G" class="answer-box" contenteditable="true"></div>
+</div>
+<div id="cropperContainer-8"></div>
+</div>
+<div class="question-block" id="block-9">
+<div class="question-header">
+<span class="point-badge">10 pts</span>
+<span class="question-text">9. For the following compounds calculate the electronegativity difference. Comment on the trend of these compounds and explain how this follows the electronegativity trends for the periodic table. Show your calculations.</span>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>E.</strong> Na<sub>3</sub>Si</div>
+<div class="toolbar" id="tb-9E"></div>
+<div id="ans-9E" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>F.</strong> Na<sub>2</sub>S</div>
+<div class="toolbar" id="tb-9F"></div>
+<div id="ans-9F" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>G.</strong> NaCl</div>
+<div class="toolbar" id="tb-9G"></div>
+<div id="ans-9G" class="answer-box" contenteditable="true"></div>
+</div>
+<div id="cropperContainer-9"></div>
+</div>
+<div class="question-block" id="block-10">
+<div class="question-header">
+<span class="point-badge">16 pts</span>
+<span class="question-text">10. Of the compounds listed below state, based on the electronegativity of the two elements, whether the compound will be covalent, polar-covalent or ionic. State whether it will dissolve in water. Show your calculations.</span>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> N<sub>2</sub></div>
+<div class="toolbar" id="tb-10A"></div>
+<div id="ans-10A" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> HCl</div>
+<div class="toolbar" id="tb-10B"></div>
+<div id="ans-10B" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> CsS</div>
+<div class="toolbar" id="tb-10C"></div>
+<div id="ans-10C" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> LiBr</div>
+<div class="toolbar" id="tb-10D"></div>
+<div id="ans-10D" class="answer-box" contenteditable="true"></div>
+</div>
+<div id="cropperContainer-10"></div>
+</div>
+<div class="question-block" id="block-11">
+<div class="question-header">
+
+<span class="question-text">11. The formulas and geometrically correct structures of two covalent compounds are shown below. CO<sub>2</sub> is practically insoluble in water and HNO is very soluble. For each molecule describe the polarity of each bond by performing a Pauling electronegativity calculation for each bond. Estimate the direction and polarity of the molecule’s dipole moment. Explain, in terms of molecular geometry and electronegativity why each compound dissolves or not in water. Show your calculations.</span>
+</div>
+<div class="source-structure-images" aria-label="Molecular structures from the original Assignment 5 document">
+<img class="source-structure-image" src="data:image/png;base64,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" alt="Original CO2 molecular structure from Assignment 5">
+<img class="source-structure-image" src="data:image/png;base64,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" alt="Original NaNO molecular structure from Assignment 5">
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> CO<sub>2</sub></div>
+<div class="toolbar" id="tb-11A"></div>
+<div id="ans-11A" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> NaNO</div>
+<div class="toolbar" id="tb-11B"></div>
+<div id="ans-11B" class="answer-box" contenteditable="true"></div>
+</div>
+<div id="cropperContainer-11"></div>
+</div>
+<div class="question-block" id="block-12">
+<div class="question-header">
+<span class="point-badge">10 pts</span>
+<span class="question-text">12. Atomic Radius is the radius of an individual neutral atom. Ionic Radius is the radius of an ion of that atom. Sodium metal (Na) and chlorine gas (Cl<sub>2</sub>) combined to form sodium chloride (NaCl) aka table salt. Elemental Sodium has an atomic radius of 154 pm and elemental chlorine has an atomic radius of 99 pm. After they combine to form Sodium Chloride (NaCl) Na<sup>+</sup> has an ionic radius of 116 pm and Cl<sup>-</sup>has an ionic radius of 167 pm. Explain in terms of the factors effecting electronegativity why these ions have different radii than their parent atoms.</span>
+</div>
+<div class="toolbar" id="tb-12"></div>
+<div id="ans-12" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="question-block" id="block-13">
+<div class="question-header">
+<span class="point-badge">4 pts</span>
+<span class="question-text">13. Name the following ionic compounds.</span>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> Cs<sub>2</sub>Cl</div>
+<div class="toolbar" id="tb-13A"></div>
+<div id="ans-13A" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> MgF<sub>2</sub></div>
+<div class="toolbar" id="tb-13B"></div>
+<div id="ans-13B" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> CaCl<sub>2</sub></div>
+<div class="toolbar" id="tb-13C"></div>
+<div id="ans-13C" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> RaO</div>
+<div class="toolbar" id="tb-13D"></div>
+<div id="ans-13D" class="answer-box" contenteditable="true"></div>
+</div>
+</div>
+<div class="question-block" id="block-14">
+<div class="question-header">
+<span class="point-badge">4 pts</span>
+<span class="question-text">14. Name the following covalent compounds.</span>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> BH<sub>3</sub></div>
+<div class="toolbar" id="tb-14A"></div>
+<div id="ans-14A" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> SO<sub>2</sub></div>
+<div class="toolbar" id="tb-14B"></div>
+<div id="ans-14B" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> CH<sub>4</sub></div>
+<div class="toolbar" id="tb-14C"></div>
+<div id="ans-14C" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> NCl<sub>3</sub></div>
+<div class="toolbar" id="tb-14D"></div>
+<div id="ans-14D" class="answer-box" contenteditable="true"></div>
+</div>
+</div>
+<div class="question-block" id="block-15">
+<div class="question-header">
+<span class="point-badge">4 pts</span>
+<span class="question-text">15. Name the following polyatomic ionic compounds.</span>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> BaCO<sub>3</sub></div>
+<div class="toolbar" id="tb-15A"></div>
+<div id="ans-15A" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> Rb<sub>3</sub>(PO<sub>4</sub>)</div>
+<div class="toolbar" id="tb-15B"></div>
+<div id="ans-15B" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> Ca(OH)<sub>2</sub></div>
+<div class="toolbar" id="tb-15C"></div>
+<div id="ans-15C" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> (NH<sub>4</sub>)<sub>2</sub>CrO<sub>4</sub></div>
+<div class="toolbar" id="tb-15D"></div>
+<div id="ans-15D" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>E.</strong> HNO<sub>3</sub></div>
+<div class="toolbar" id="tb-15E"></div>
+<div id="ans-15E" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>F.</strong> NaNO<sub>3</sub></div>
+<div class="toolbar" id="tb-15F"></div>
+<div id="ans-15F" class="answer-box" contenteditable="true"></div>
+</div>
+</div>
+<div class="question-block" id="block-16">
+<div class="question-header">
+<span class="point-badge">10 pts</span>
+<span class="question-text">16. Write the molecular formulas for the following compounds.</span>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> Diboron Trioxide</div>
+<div class="toolbar" id="tb-16A"></div>
+<div id="ans-16A" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> Potassium Sulfate</div>
+<div class="toolbar" id="tb-16B"></div>
+<div id="ans-16B" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> Magnesium Chloride</div>
+<div class="toolbar" id="tb-16C"></div>
+<div id="ans-16C" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> Phosphorous Tribromide</div>
+<div class="toolbar" id="tb-16D"></div>
+<div id="ans-16D" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>E.</strong> Calcium Oxide</div>
+<div class="toolbar" id="tb-16E"></div>
+<div id="ans-16E" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>F.</strong> Selenium Disulfide</div>
+<div class="toolbar" id="tb-16F"></div>
+<div id="ans-16F" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>G.</strong> Lithium Phosphate</div>
+<div class="toolbar" id="tb-16G"></div>
+<div id="ans-16G" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>H.</strong> Carbon Tetraiodide</div>
+<div class="toolbar" id="tb-16H"></div>
+<div id="ans-16H" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>I.</strong> Hydroiodic Acid</div>
+<div class="toolbar" id="tb-16I"></div>
+<div id="ans-16I" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>J.</strong> Sodium Nitrate</div>
+<div class="toolbar" id="tb-16J"></div>
+<div id="ans-16J" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>K.</strong> Nitric Acid</div>
+<div class="toolbar" id="tb-16K"></div>
+<div id="ans-16K" class="answer-box" contenteditable="true"></div>
+</div>
+</div>
+<div class="question-block" id="block-17">
+<div class="question-header">
+<span class="point-badge">10 pts</span>
+<span class="question-text">17. Calculate the oxidation state for each atom in the following compounds.</span>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> OF<sub>2</sub></div>
+<div class="toolbar" id="tb-17A"></div>
+<div id="ans-17A" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> H<sub>2</sub>O</div>
+<div class="toolbar" id="tb-17B"></div>
+<div id="ans-17B" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> BI<sub>3</sub></div>
+<div class="toolbar" id="tb-17C"></div>
+<div id="ans-17C" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> BH<sub>3</sub></div>
+<div class="toolbar" id="tb-17D"></div>
+<div id="ans-17D" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>E.</strong> CO<sub>2</sub></div>
+<div class="toolbar" id="tb-17E"></div>
+<div id="ans-17E" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>F.</strong> CS<sub>2</sub></div>
+<div class="toolbar" id="tb-17F"></div>
+<div id="ans-17F" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>G.</strong> P<sub>2</sub>O<sub>5</sub></div>
+<div class="toolbar" id="tb-17G"></div>
+<div id="ans-17G" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>H.</strong> HBO</div>
+<div class="toolbar" id="tb-17H"></div>
+<div id="ans-17H" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>I.</strong> SiCl<sub>4</sub></div>
+<div class="toolbar" id="tb-17I"></div>
+<div id="ans-17I" class="answer-box" contenteditable="true"></div>
+</div>
+</div>
+<div class="question-block" id="block-18">
+<div class="question-header">
+<span class="point-badge">12 pts</span>
+<span class="question-text">18. Name the following metallic ionic compounds and state the oxidation state of the metal cation.</span>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>A.</strong> Cr(MnO<sub>4</sub>)<sub>3</sub></div>
+<div class="toolbar" id="tb-18A"></div>
+<div id="ans-18A" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>B.</strong> Fe<sub>2</sub>S<sub>3</sub></div>
+<div class="toolbar" id="tb-18B"></div>
+<div id="ans-18B" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>C.</strong> FeS</div>
+<div class="toolbar" id="tb-18C"></div>
+<div id="ans-18C" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>D.</strong> Os(NO<sub>3</sub>)<sub>4</sub></div>
+<div class="toolbar" id="tb-18D"></div>
+<div id="ans-18D" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>E.</strong> Mo(OH)<sub>6</sub></div>
+<div class="toolbar" id="tb-18E"></div>
+<div id="ans-18E" class="answer-box" contenteditable="true"></div>
+</div>
+<div class="sub-question-block"><div class="question-text" style="font-size:15px; margin-bottom:8px;"><strong>F.</strong> V<sub>3</sub>(PO<sub>4</sub>)<sub>5</sub></div>
+<div class="toolbar" id="tb-18F"></div>
+<div id="ans-18F" class="answer-box" contenteditable="true"></div>
+</div>
+</div>
+</div>
+</form>
+<div class="summary-section">
+<h2>Answers</h2>
+<table class="summary-table"><thead><tr><th style="width: 180px;">Questions</th><th>Answers</th></tr></thead>
+<tbody id="summaryTableBody"></tbody></table>
+</div>
+<div style="text-align:center;">
+<div class="action-warning">⚠️ Once the print button is activated no further editing of the document can be performed.</div><br>
+<button type="button" class="btn-download-pdf" onclick="validateAndPrint();">💾 Convert &amp; Download Document PDF</button>
+</div>
+</div>
+<script>
+
+	// --- Global HEIC Drop-In Interceptor ---
+document.addEventListener('change', function(e) {
+    // Check if the modified element is a file input field
+    if (e.target && e.target.type === 'file' && e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        
+        // If the file extension indicates it's a HEIC file
+        if (/\.(heic|heif)$/i.test(file.name)) {
+            e.stopImmediatePropagation(); // Temporarily stop original code from running
+            
+            const originalInput = e.target;
+            const parentLabel = originalInput.closest('.file-input-wrapper');
+            const statusText = parentLabel ? parentLabel.querySelector('p') : null;
+            const fallbackText = statusText ? statusText.innerText : '';
+            
+            if (statusText) statusText.innerText = "🔄 Converting HEIC image, please wait...";
+
+            // Convert the HEIC file into a standard JPEG blob client-side
+            heic2any({
+                blob: file,
+                toType: "image/jpeg",
+                quality: 0.85
+            })
+            .then(function(convertedBlob) {
+                if (statusText) statusText.innerText = fallbackText;
+                
+                // Create a standard file object from the new JPEG data stream
+                const standardFile = new File([convertedBlob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), { type: "image/jpeg" });
+                
+                // Bundle the new JPEG file into a standard data transfer container
+                const dataContainer = new DataTransfer();
+                dataContainer.items.add(standardFile);
+                originalInput.files = dataContainer.files;
+                
+                // Re-trigger the original change event using our standard JPEG file wrapper
+                const forcedEvent = new Event('change', { bubbles: true });
+                originalInput.dispatchEvent(forcedEvent);
+            })
+            .catch(function(err) {
+                if (statusText) statusText.innerText = fallbackText;
+                alert("Could not process HEIC/HEIF file. Please select a JPEG or PNG, or try the HEIC file again.");
+                originalInput.value = ""; // Safely reset selection on error
+            });
+        }
+    }
+}, true); // The 'true' flag ensures this runs BEFORE your original upload code triggers
+
+        document.addEventListener('keydown', function(e) {
+            // Check if the target is an editable element or input field
+            const isEditable = e.target.matches('input, [contenteditable="true"]');
+            
+            // If the user presses capital 'I' (Shift + I or KeyI with Caps Lock) inside an editable container, allow it completely
+            if (e.key === 'I' && isEditable) {
+                return true;
+            }
+
+            if ((e.ctrlKey || e.metaKey) && e.keyCode === 67) { e.preventDefault(); return false; }
+            if ((e.ctrlKey || e.metaKey) && e.keyCode === 80) { e.preventDefault(); return false; }
+            if ((e.ctrlKey || e.metaKey) && e.keyCode === 83) { e.preventDefault(); return false; }
+            if (e.keyCode === 123 || ((e.ctrlKey || e.shiftKey || e.metaKey) && e.keyCode === 73)) { e.preventDefault(); return false; }
+        });
+
+        const customSymbols = ['→', '⇌', '°C', 'Δ', 'π', '±', '²', '³', '⁻', '⁺', '×', '·', 'µ', '⁻¹', '⁻²', '⁻³'];
+        
+        const textAnswerIds = ["1A", "1B", "1C", "1D", "1E", "1F", "1G", "1H", "1I", "1J", "2A", "2B", "2C", "2D", "2E", "2F", "2G", "2H", "2I", "2J", "3A", "3B", "3C", "3D", "3E", "3F", "3G", "3H", "3I", "3J", "4", "5", "6", "7A", "7B", "7C", "7D", "8E", "8F", "8G", "9E", "9F", "9G", "10A", "10B", "10C", "10D", "11A", "11B", "12", "13A", "13B", "13C", "13D", "14A", "14B", "14C", "14D", "15A", "15B", "15C", "15D", "15E", "15F", "16A", "16B", "16C", "16D", "16E", "16F", "16G", "16H", "16I", "16J", "16K", "17A", "17B", "17C", "17D", "17E", "17F", "17G", "17H", "17I", "18A", "18B", "18C", "18D", "18E", "18F"];
+
+                        const workPhotoKeys = ["7", "8", "9", "10", "11"];
+
+
+
+        const summaryBody = document.getElementById('summaryTableBody');
+        summaryBody.innerHTML = '';
+        for (let q = 1; q <= 18; q++) {
+            const ids = textAnswerIds.filter(id => id === String(q) || new RegExp(`^${q}[A-Z]$`).test(id));
+            if (!ids.length) continue;
+            summaryBody.innerHTML += `<tr><td style="font-weight:600;">Question ${q}</td><td>`;
+            if (ids.length === 1 && ids[0] === String(q)) {
+                summaryBody.innerHTML += `<div id="sum-${q}"></div>`;
+            } else {
+                ids.forEach(id => {
+                    const suffix = id.slice(String(q).length);
+                    summaryBody.innerHTML += `<div style="margin-bottom:8px;"><strong>Sub-question ${suffix}:</strong> <span id="sum-${id}"></span></div>`;
+                });
+            }
+            if (workPhotoKeys.includes(String(q))) {
+                summaryBody.innerHTML += `<div id="sum-photo-${q}"></div>`;
+            }
+            summaryBody.innerHTML += `</td></tr>`;
+        }
+
+        textAnswerIds.forEach(id => {
+            const tb = document.getElementById(`tb-${id}`);
+            if (!tb) return;
+
+            const btnSup = document.createElement('button');
+            btnSup.type = 'button';
+            btnSup.innerHTML = 'x<sup>2</sup>';
+            btnSup.onclick = () => execCmd('superscript');
+            tb.appendChild(btnSup);
+
+            const btnSub = document.createElement('button');
+            btnSub.type = 'button';
+            btnSub.innerHTML = 'x<sub>2</sub>';
+            btnSub.onclick = () => execCmd('subscript');
+            tb.appendChild(btnSub);
+
+            customSymbols.forEach(sym => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'symbol-btn';
+                btn.innerText = sym;
+                btn.onclick = () => injectText(sym, `ans-${id}`);
+                tb.appendChild(btn);
+            });
+
+            const answerBox = document.getElementById(`ans-${id}`);
+            if (answerBox) {
+                answerBox.oninput = () => {
+                    const targetSummaryCell = document.getElementById(`sum-${id}`);
+                    if (targetSummaryCell) {
+                        targetSummaryCell.innerHTML = answerBox.innerHTML;
+                    }
+                };
+            }
+        });
+
+        document.execCommand("defaultParagraphSeparator", false, "p");
+
+        function execCmd(command) {
+            document.execCommand(command, false, null);
+        }
+
+        function injectText(text, targetId) {
+            const box = document.getElementById(targetId);
+            if (!box) return;
+            box.focus();
+            
+            const sel = window.getSelection();
+            if (sel.getRangeAt && sel.rangeCount) {
+                const range = sel.getRangeAt(0);
+                range.deleteContents();
+                const textNode = document.createTextNode(text);
+                range.insertNode(textNode);
+                
+                range.setStartAfter(textNode);
+                range.setEndAfter(textNode);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+            box.oninput();
+        }
+
+        let imgStates = {};
+
+        function createPhotoCropperEngine(parentId, questionKey) {
+            const parent = document.getElementById(parentId);
+            if (!parent) return;
+
+            imgStates[questionKey] = { imgObj: null, base64Raw: null, scale: 1, rot: 0, posX: 0, posY: 0, isDragging: false, startX: 0, startY: 0 };
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'photo-workspace-wrapper';
+
+            const innerCanvas = document.createElement('div');
+            innerCanvas.className = 'photo-inner-canvas';
+
+            const fileWrapper = document.createElement('div');
+            fileWrapper.className = 'file-input-wrapper';
+            fileWrapper.innerHTML = `
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:6px; color:#94a3b8;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <p style="margin:0; font-size:13px; font-weight:500;">Drag & Drop "Show Your Work" Calculation Image or Click to Browse</p>
+                <input type="file" accept="image/*,.heic,.heif" id="file-${questionKey}">
+            `;
+
+            const stage = document.createElement('div');
+            stage.className = 'cropper-stage';
+            stage.id = `stage-${questionKey}`;
+
+            const img = document.createElement('img');
+            img.className = 'cropper-image';
+            img.id = `img-${questionKey}`;
+            img.alt = 'Calculation Sheet Workspace';
+            stage.appendChild(img);
+
+            innerCanvas.appendChild(fileWrapper);
+            innerCanvas.appendChild(stage);
+            wrapper.appendChild(innerCanvas);
+
+            const controls = document.createElement('div');
+            controls.className = 'crop-controls';
+            controls.innerHTML = `
+                <div class="control-row">
+                    <label>Scale Zoom</label>
+                    <input type="range" id="zoom-${questionKey}" min="0.1" max="3" step="0.01" value="1">
+                </div>
+                <div class="control-row">
+                    <label>Rotation</label>
+                    <input type="range" id="rotate-${questionKey}" min="0" max="360" step="1" value="0">
+                </div>
+                <button type="button" class="btn-remove-photo" id="remove-${questionKey}">Remove Photo</button>
+            `;
+
+            parent.appendChild(wrapper);
+            parent.appendChild(controls);
+
+            const fileInput = fileWrapper.querySelector('input[type="file"]');
+            const zoomSlider = controls.querySelector('input[id^="zoom-"]');
+            const rotateSlider = controls.querySelector('input[id^="rotate-"]');
+            const removeBtn = controls.querySelector('.btn-remove-photo');
+
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        imgStates[questionKey].base64Raw = event.target.result;
+                        img.src = event.target.result;
+                        img.onload = function() {
+                            fileWrapper.style.display = 'none';
+                            stage.style.display = 'block';
+                            controls.style.display = 'flex';
+                            
+                            imgStates[questionKey].scale = 1;
+                            imgStates[questionKey].rot = 0;
+                            imgStates[questionKey].posX = (stage.clientWidth - img.naturalWidth) / 2;
+                            imgStates[questionKey].posY = (stage.clientHeight - img.naturalHeight) / 2;
+                            
+                            zoomSlider.value = 1;
+                            rotateSlider.value = 0;
+                            updateImageTransforms(questionKey);
+                            syncPhotoToSummary(questionKey);
+                        };
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+
+            stage.addEventListener('mousedown', (e) => {
+                imgStates[questionKey].isDragging = true;
+                imgStates[questionKey].startX = e.clientX - imgStates[questionKey].posX;
+                imgStates[questionKey].startY = e.clientY - imgStates[questionKey].posY;
+                stage.style.cursor = 'grabbing';
+            });
+
+            window.addEventListener('mouseup', () => {
+                imgStates[questionKey].isDragging = false;
+                stage.style.cursor = 'move';
+            });
+
+            stage.addEventListener('mousemove', (e) => {
+                if (!imgStates[questionKey].isDragging) return;
+                imgStates[questionKey].posX = e.clientX - imgStates[questionKey].startX;
+                imgStates[questionKey].posY = e.clientY - imgStates[questionKey].startY;
+                updateImageTransforms(questionKey);
+            });
+
+            zoomSlider.addEventListener('input', (e) => {
+                imgStates[questionKey].scale = parseFloat(e.target.value);
+                updateImageTransforms(questionKey);
+                syncPhotoToSummary(questionKey);
+            });
+
+            rotateSlider.addEventListener('input', (e) => {
+                imgStates[questionKey].rot = parseInt(e.target.value);
+                updateImageTransforms(questionKey);
+                syncPhotoToSummary(questionKey);
+            });
+
+            removeBtn.addEventListener('click', () => {
+                removePhoto(questionKey);
+            });
+        }
+
+        function updateImageTransforms(key) {
+            const img = document.getElementById(`img-${key}`);
+            if (img) {
+                img.style.transform = `translate(${imgStates[key].posX}px, ${imgStates[key].posY}px) scale(${imgStates[key].scale}) rotate(${imgStates[key].rot}deg)`;
+            }
+        }
+
+        function syncPhotoToSummary(key) {
+            const state = imgStates[key];
+            const stage = document.getElementById(`stage-${key}`);
+            const img = document.getElementById(`img-${key}`);
+            const targetContainer = document.getElementById(`sum-photo-${key}`);
+
+            if (!state || !stage || !img || !targetContainer || !img.naturalWidth || !img.naturalHeight) return;
+
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = Math.max(1, stage.clientWidth);
+            exportCanvas.height = Math.max(1, stage.clientHeight);
+            const ctx = exportCanvas.getContext('2d');
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+
+            ctx.save();
+            ctx.translate(
+                state.posX + img.naturalWidth / 2,
+                state.posY + img.naturalHeight / 2
+            );
+            ctx.scale(state.scale, state.scale);
+            ctx.rotate((state.rot * Math.PI) / 180);
+            ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+            ctx.restore();
+
+            const previewBase64 = exportCanvas.toDataURL('image/jpeg', 0.85);
+            targetContainer.innerHTML = `
+                <img src="${previewBase64}" class="summary-preview-img" alt="Calculation work photo">
+            `;
+        }
+
+        function removePhoto(key) {
+            const state = imgStates[key];
+            const fileInput = document.getElementById(`file-${key}`);
+            const stage = document.getElementById(`stage-${key}`);
+            const img = document.getElementById(`img-${key}`);
+            const workspace = stage ? stage.closest('.photo-workspace-wrapper') : null;
+            const fileWrapper = workspace ? workspace.querySelector('.file-input-wrapper') : null;
+            const controls = workspace ? workspace.nextElementSibling : null;
+            const zoomSlider = document.getElementById(`zoom-${key}`);
+            const rotateSlider = document.getElementById(`rotate-${key}`);
+            const targetContainer = document.getElementById(`sum-photo-${key}`);
+
+            if (fileInput) fileInput.value = '';
+            if (img) {
+                img.removeAttribute('src');
+                img.style.transform = '';
+            }
+            if (stage) stage.style.display = 'none';
+            if (fileWrapper) fileWrapper.style.display = 'flex';
+            if (controls) controls.style.display = 'none';
+            if (zoomSlider) zoomSlider.value = 1;
+            if (rotateSlider) rotateSlider.value = 0;
+
+            if (state) {
+                state.imgObj = null;
+                state.base64Raw = null;
+                state.scale = 1;
+                state.rot = 0;
+                state.posX = 0;
+                state.posY = 0;
+                state.isDragging = false;
+            }
+
+            if (targetContainer) targetContainer.innerHTML = '';
+        }
+
+        workPhotoKeys.forEach(key => {
+            createPhotoCropperEngine(`cropperContainer-${key}`, key);
+        });
+
+        function validateAndPrint() {
+            const banner = document.getElementById('validationBanner');
+            const studentName = document.getElementById('studentName').value.trim();
+
+            // Only text-answer boxes are required for printing.
+            // Photo boxes are intentionally optional.
+            const answerBoxes = textAnswerIds
+                .map(id => document.getElementById(`ans-${id}`))
+                .filter(Boolean);
+
+            let allFilled = Boolean(studentName);
+
+            answerBoxes.forEach(box => {
+                if (!box.textContent.trim()) {
+                    allFilled = false;
+                }
+            });
+
+            if (!allFilled) {
+                banner.style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                banner.style.display = 'none';
+                window.print();
+
+                setTimeout(() => {
+                    document.getElementById('studentName').disabled = true;
+                    answerBoxes.forEach(box => {
+                        box.setAttribute('contenteditable', 'false');
+                    });
+                    document.querySelectorAll('.toolbar').forEach(tb => tb.style.display = 'none');
+                    document.querySelectorAll('.crop-controls').forEach(ctrl => ctrl.style.display = 'none');
+                    document.querySelectorAll('.file-input-wrapper').forEach(fw => fw.style.display = 'none');
+                }, 1000);
+            }
+        }
+    </script>
+<!-- The Question 10 structure images above are exact crops of the artwork embedded in the original DOCX. -->
+</body>
+</html>
