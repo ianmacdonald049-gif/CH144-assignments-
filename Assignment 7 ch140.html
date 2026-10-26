@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assignment 7, CH140 Fall 2026</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f4f6f9;color:#333;line-height:1.6;margin:0;padding:20px}
+.container{max-width:900px;margin:0 auto;background:#fff;padding:40px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.05)}
+h1{text-align:center;color:#1e3a8a;margin:0 0 5px;font-size:28px}
+.max-points-container{display:flex;justify-content:center;margin:0 0 30px}
+.max-points-tally{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:8px 16px;border-radius:20px;font-size:14px;font-weight:700}
+.student-info-block{display:flex;gap:20px;background:#f8fafc;padding:20px;border-radius:6px;border:1px solid #e2e8f0;margin-bottom:30px}
+.info-group{flex:1;display:flex;flex-direction:column;gap:5px}
+.info-group label{font-weight:600;font-size:14px;color:#475569}
+.info-group input{padding:10px;border:1px solid #cbd5e1;border-radius:4px;font-size:15px}
+.question-block{margin-bottom:30px;padding-bottom:25px;border-bottom:1px solid #e2e8f0}
+.question-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.point-badge{background:#e0f2fe;color:#0369a1;font-weight:700;font-size:13px;padding:4px 10px;border-radius:4px;white-space:nowrap;border:1px solid #bae6fd}
+.question-text{font-weight:600;font-size:16px;color:#1e293b;line-height:1.5}.equation-line{display:block;margin:8px 0 10px;padding:8px 12px;background:#f8fafc;border-left:3px solid #94a3b8;font-weight:600;font-family:Cambria,Georgia,serif;white-space:normal;overflow-wrap:normal;break-inside:avoid}
+.sub-question-block{margin-top:15px;padding-left:15px;border-left:3px solid #cbd5e1;margin-bottom:15px}
+.toolbar{display:flex;gap:4px;background:#f1f5f9;padding:6px;border-radius:6px 6px 0 0;border:1px solid #cbd5e1;border-bottom:none;flex-wrap:wrap}
+.toolbar button{background:#fff;border:1px solid #cbd5e1;border-radius:4px;padding:4px 10px;font-size:13px;cursor:pointer;font-weight:500;color:#334155}
+.toolbar button:hover{background:#e2e8f0}
+.symbol-btn{font-family:Cambria,Georgia,serif;font-weight:bold}
+.answer-box{min-height:90px;border:1px solid #cbd5e1;border-radius:0 0 6px 6px;padding:12px;background:#fff;outline:none;font-size:15px;overflow-y:auto;margin-bottom:10px;user-select:text}
+.answer-box:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+.photo-workspace-wrapper{width:100%;position:relative;background:#0f172a;border-radius:8px;overflow:hidden;border:2px dashed #cbd5e1;padding-top:80%;margin:10px 0}
+.photo-inner-canvas{position:absolute;inset:0;display:flex;justify-content:center;align-items:center}
+.file-input-wrapper{position:absolute;z-index:10;text-align:center;color:#cbd5e1;cursor:pointer;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px}
+.file-input-wrapper input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.cropper-stage{display:none;width:100%;height:100%;position:relative;overflow:hidden;cursor:move;touch-action:none}
+.cropper-image{position:absolute;transform-origin:center center;max-width:none;max-height:none;user-select:none;pointer-events:none}
+.crop-controls{display:none;background:#1e293b;padding:15px;border-radius:0 0 8px 8px;color:white;gap:15px;flex-direction:column;margin-bottom:25px}
+.control-row{display:flex;align-items:center;gap:10px;font-size:13px}.control-row label{width:80px}.control-row input[type=range]{flex:1}
+.btn-remove-photo{background:#dc2626;color:#fff;border:0;padding:8px 16px;border-radius:4px;font-weight:600;cursor:pointer;align-self:flex-end}
+.summary-section{margin-top:20px;padding-top:30px;border-top:3px solid #1e3a8a}
+.summary-section h2{color:#1e3a8a;font-size:22px;margin-bottom:15px}
+.summary-table{width:100%;border-collapse:collapse;background:#fff;font-size:14px}
+.summary-table th,.summary-table td{border:1px solid #cbd5e1;padding:12px;text-align:left;vertical-align:top}
+.summary-table th{background:#f8fafc;color:#1e293b}.summary-table td p{margin:0;word-break:break-word;white-space:pre-wrap}
+.summary-preview-img{max-width:100%;max-height:300px;object-fit:contain;border:1px solid #e2e8f0;display:block;margin-top:10px}
+.btn-download-pdf{background:#1e3a8a;color:white;border:0;padding:12px 24px;border-radius:6px;font-size:16px;font-weight:600;cursor:pointer;margin-top:10px}
+.validation-alert{display:none;background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;padding:15px;border-radius:6px;margin-bottom:20px;font-weight:600;text-align:center}
+.action-warning{color:#dc2626;background:#fef2f2;border:1px dashed #fca5a5;padding:10px 20px;border-radius:6px;font-weight:600;font-size:14px;margin:20px auto 10px;display:inline-block;text-align:center}
+@media(max-width:600px){body{padding:8px}.container{padding:16px}.question-header{flex-direction:column}.student-info-block{padding:12px}}
+@media print{
+ @page{margin:.5in}
+ body{background:#fff;color:#000;padding:0;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .container{box-shadow:none;padding:0;max-width:100%;width:100%}
+ .toolbar,.crop-controls,.file-input-wrapper,.btn-download-pdf,.validation-alert,.action-warning{display:none!important}
+ .question-block,.sub-question-block,.summary-table tr,.student-info-block,.summary-section{break-inside:avoid}
+ .max-points-tally{background:none;border:1px solid #000;color:#000}
+ .photo-workspace-wrapper{background:#fff;border:1px solid #999}
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+</head>
+<body>
+<div class="container">
+<div id="validationBanner" class="validation-alert">⚠️ Please enter your Student Name and answer all text fields before converting to PDF.</div>
+<h1>Assignment 7 CH140 Fall 2026</h1>
+<div class="max-points-container"><div class="max-points-tally">📊 Maximum Points Available: 113 pts</div></div>
+<div class="student-info-block"><div class="info-group"><label for="studentName">Student Full Name</label><input type="text" id="studentName" placeholder="Enter full name..." autocomplete="off"></div></div>
+<form id="assignmentForm" onsubmit="return false;"><div id="questionsContainer"></div></form>
+<div class="summary-section"><h2>Answers</h2><table class="summary-table"><thead><tr><th style="width:180px">Questions</th><th>Answers</th></tr></thead><tbody id="summaryTableBody"></tbody></table></div>
+<div style="text-align:center"><div class="action-warning">⚠️ Once the print button is activated, editing will be disabled.</div><br><button type="button" class="btn-download-pdf" id="printButton">💾 Convert &amp; Download Document PDF</button></div>
+</div>
+<script>
+const questions = [
+{n:1,pts:5,title:'For the following reaction, state:',equation:'3Be(s) + N₂(g) → Be₃N₂(s)',parts:[
+['A','What elements are present?'],['B','What compounds are present?'],['C','What are the reactants and products?'],['D','The reaction coefficients for the reaction.'],['E','The states of each reactant and product.']]},
+{n:2,pts:5,title:'State the type of reaction that is shown below.',parts:[
+['A','2HClO₃(aq) → HClO(aq) + HClO₃(aq)'],['B','2H₃PO₄(aq) + Fe₂O₃(s) → 2FePO₄(s) + 3H₂O(l)'],['C','H₂S₂(l) → S(s) + H₂S(g)'],['D','Al(s) + HCl(aq) → AlCl₃(aq) + H₂(g)'],['E','S₈(s) + 24F₂(g) → 8SF₆(g)']]},
+{n:3,pts:20,title:'Balance the following equations.',parts:[
+['A','Xe(s) + F₂(g) → XeF₆(g)'],['B','Ca(s) + P(s) → Ca₃P₂(s)'],['C','Ca₃(PO₄)₂(s) + C(s) → Ca₃P₂(s) + CO(g)'],['D','NH₃(g) + F₂(g) → NF₃(g) + NH₄F(s)'],['E','C₂H₄O₂(aq) + NaHCO₃ → C₂H₃O₂Na(aq) + CO₂(g) + H₂O(l)'],['F','Al(s) + CuCl₂(aq) → AlCl₃(s) + Cu(s)'],['G','NaHCO₃(s) + C₆H₈O₇(s) → Na₃C₆H₅O₇(aq) + H₂O(aq) + CO₂(g)'],['H','Fe₂O₃(s) + Al(s) → Fe(s) + Al₂O₃(s)'],['I','Cu(NO₃)₂(aq) + Na₃PO₄(aq) → Cu₃(PO₄)₂(s) + NaNO₃(aq)'],['J','H₂O₂(aq) → O₂(g) + H₂O(l)']]},
+{n:4,pts:10,title:'Balance the following combustion reactions.',parts:[
+['A','C₇H₈(l) + O₂(g) → CO₂(g) + H₂O(l)'],['B','C₁₀H₈(s) + O₂(g) → CO₂(g) + H₂O(l)'],['C','C₂H₆O(l) + O₂(g) → CO₂(g) + H₂O(l)'],['D','C₆H₆O₂(s) + O₂(g) → CO₂(g) + H₂O(l)'],['E','C₅H₅N(l) + O₂(g) → CO₂(g) + H₂O(l) + NO₂(g)']]},
+{n:5,pts:3,title:'Write out the balanced combustion reaction for the liquid hydrocarbon C₈H₁₆O.',parts:[['','Answer']]},
+{n:6,pts:17,title:'Sodium nitrate decomposes at high temperatures according to the reaction. Show your work for all steps.',equation:'NaNO₃(s) → Na₂O(g) + N₂(g) + O₂(g)',photo:true,parts:[
+['A','(2 pts) Balance the equation.'],['B','(2 pts) Calculate the number of moles in 0.5 g NaNO₃.'],['C','(6 pts) Calculate the moles of Na₂O, N₂ and O₂ produced when 0.5 g NaNO₃ thermally decomposes.'],['D','(6 pts) Calculate the mass, in grams, of Na₂O, N₂ and O₂ produced when 0.5 g NaNO₃ thermally decomposes.'],['E','(1 pt) Show that the conservation of mass is obeyed by your calculations.']]},
+{n:7,pts:16,title:'If ammonia (NH₃) and bleach, aka sodium hypochlorite (NaOCl), are mixed, sodium hydroxide (NaOH) and the dangerous gas monochloramine (NH₂Cl) are produced. If 0.01 g NH₃ is reacted with 0.04 g NaOCl, show your work for all steps. The balanced reaction is:',equation:'NH₃(aq) + NaOCl(aq) → NaOH(aq) + NH₂Cl(g)',photo:true,parts:[
+['A','(4 pts) Calculate the molecular weights of each of the products and reactants.'],['B','(4 pts) Calculate the moles of the reactants NH₃ and NaOCl.'],['C','(4 pts) Determine the moles of NaOH and NH₂Cl that will be formed.'],['D','(4 pts) Calculate the mass of NaOH and NH₂Cl that will be formed.']]},
+{n:8,pts:9,title:'The red colors in fireworks displays are produced by the thermal decomposition of strontium carbonate. A 2 lb firework shell contains 900 g of explosive, of which 17% is strontium carbonate. Show your work for all steps. The balanced equation is:',equation:'SrCO₃(s) → SrO(s) + CO₂(g)',photo:true,parts:[
+['A','(3 pts) Calculate the molecular weights of the products and reactants.'],['B','(2 pts) Calculate the amount of SrCO₃ in a firework shell.'],['C','(2 pts) Calculate the number of moles of SrCO₃ in the shell.'],['D','(2 pts) Calculate the number of moles of SrO and CO₂ produced by this reaction.']]},
+{n:9,pts:20,title:'Diesel fuel can be considered to consist of C₁₂H₂₆. Show your work for all steps.',photo:true,parts:[
+['A','(6 pts) Write out and balance the equation for the combustion of C₁₂H₂₆.'],['B','(2 pts) Calculate the number of moles in 100 g of C₁₂H₂₆.'],['C','(4 pts) Calculate the number of moles of carbon dioxide and water produced by the combustion of C₁₂H₂₆.'],['D','(4 pts) Calculate the masses, in g, of carbon dioxide and water produced by the combustion of C₁₂H₂₆.'],['E','(2 pts) Calculate the number of moles of O₂ needed to completely consume 100 g C₁₂H₂₆.'],['F','(2 pts) Calculate the mass of O₂ needed to completely consume 100 g C₁₂H₂₆.']]},
+{n:10,pts:8,title:'Almost every culture on earth reports mysterious phenomena of ghostly light orbs (sometimes known as Will-o’-the Wisps) hovering over marshes. Some ascribe these to malevolent spirits luring fishermen or lost travelers to their doom in the swamps. Some ascribe them to unbaptized souls, witches, imps or the ghosts of soldiers and animals lost in battle. The most common explanation for the Will-o’-the Wisps is the spontaneous combustion of phosphine (PH₃) produced by marsh microorganisms. Show your work for all steps. The reaction is:',equation:'PH₃(g) + O₂(g) → P₂O₅(s) + H₂O(l)',photo:true,parts:[
+['A','(2 pts) Balance the reaction.'],['B','(2 pts) A swamp-gas bubble contains 7.9 ng of phosphine. Calculate the number of moles of phosphine in the bubble.'],['C','(2 pts) Calculate the moles of P₂O₅ produced when all of the phosphine is combusted.'],['D','(2 pts) Calculate the mass of P₂O₅ produced when phosphine is combusted.']]}
+];
+const symbols=['→','⇌','°C','Δ','π','±','²','³','⁻','⁺','×','·','µ','⁻¹','⁻²','⁻³'];
+const answerIds=[];
+const photoKeys=[];
+const summaryBody=document.getElementById('summaryTableBody');
+const questionsContainer=document.getElementById('questionsContainer');
+
+function makeToolbar(id){
+ const bar=document.createElement('div');bar.className='toolbar';bar.id='tb-'+id;
+ const sup=document.createElement('button');sup.type='button';sup.innerHTML='x<sup>2</sup>';sup.onclick=()=>formatText('superscript');bar.appendChild(sup);
+ const sub=document.createElement('button');sub.type='button';sub.innerHTML='x<sub>2</sub>';sub.onclick=()=>formatText('subscript');bar.appendChild(sub);
+ symbols.forEach(sym=>{const b=document.createElement('button');b.type='button';b.className='symbol-btn';b.textContent=sym;b.onclick=()=>insertSymbol(sym,id);bar.appendChild(b)});
+ return bar;
+}
+function formatText(command){document.execCommand(command,false,null)}
+function insertSymbol(symbol,id){
+ const box=document.getElementById('ans-'+id);box.focus();
+ const sel=window.getSelection();
+ if(sel&&sel.rangeCount){const range=sel.getRangeAt(0);if(box.contains(range.commonAncestorContainer)){range.deleteContents();const node=document.createTextNode(symbol);range.insertNode(node);range.setStartAfter(node);range.collapse(true);sel.removeAllRanges();sel.addRange(range)}else{box.appendChild(document.createTextNode(symbol))}}else{box.appendChild(document.createTextNode(symbol))}
+ box.dispatchEvent(new Event('input',{bubbles:true}));
+}
+questions.forEach(q=>{
+ const block=document.createElement('section');block.className='question-block';block.id='block-'+q.n;
+ const header=document.createElement('div');header.className='question-header';
+ const badge=document.createElement('span');badge.className='point-badge';badge.textContent=q.pts+' pts';
+ const title=document.createElement('span');title.className='question-text';title.textContent=q.n+'. '+q.title;
+ header.append(badge,title);block.appendChild(header);
+ if(q.equation){const eq=document.createElement('div');eq.className='equation-line';eq.textContent=q.equation;block.appendChild(eq)}
+ const ids=[];
+ q.parts.forEach(([letter,text])=>{
+  const subblock=document.createElement('div');subblock.className='sub-question-block';
+  const prompt=document.createElement('div');prompt.className='question-text';prompt.style.cssText='font-size:15px;margin-bottom:8px;';
+  if(letter){const strong=document.createElement('strong');strong.textContent=letter+'. ';prompt.append(strong)}
+  prompt.append(document.createTextNode(text));subblock.appendChild(prompt);
+  const id=letter?`${q.n}${letter}`:`${q.n}`;ids.push(id);answerIds.push(id);
+  subblock.appendChild(makeToolbar(id));
+  const answer=document.createElement('div');answer.className='answer-box';answer.contentEditable='true';answer.id='ans-'+id;
+  answer.addEventListener('input',()=>{const dest=document.getElementById('sum-'+id);if(dest)dest.innerHTML=answer.innerHTML});
+  subblock.appendChild(answer);block.appendChild(subblock);
+ });
+ if(q.photo){
+  photoKeys.push(String(q.n));
+  const note=document.createElement('div');note.className='question-text';note.style.marginTop='12px';note.textContent='Optional photo of work (one photo box for this question):';block.appendChild(note);
+  const holder=document.createElement('div');holder.id='cropperContainer-'+q.n;block.appendChild(holder);
+ }
+ questionsContainer.appendChild(block);
+ const row=document.createElement('tr');const qcell=document.createElement('td');qcell.style.fontWeight='600';qcell.textContent='Question '+q.n+' ('+q.pts+' pts)';
+ const acell=document.createElement('td');
+ ids.forEach(id=>{const wrap=document.createElement('div');wrap.style.marginBottom='8px';const dest=document.createElement('span');dest.id='sum-'+id;{const label=document.createElement('strong');const partText=(q.parts.find(part=>(part[0]?`${q.n}${part[0]}`:`${q.n}`)===id)||[])[1]||'';const pointMatch=partText.match(/\((\d+)\s*pts?\)/i);label.textContent=(ids.length>1?'Sub-question '+id.slice(String(q.n).length):'Answer')+(pointMatch?' ('+pointMatch[1]+' pts)':(ids.length===1?' ('+q.pts+' pts)':''))+': ';wrap.appendChild(label)}wrap.appendChild(dest);acell.appendChild(wrap)});
+ if(q.photo){const photoDest=document.createElement('div');photoDest.id='sum-photo-'+q.n;acell.appendChild(photoDest)}
+ row.append(qcell,acell);summaryBody.appendChild(row);
+});
+
+const imgStates={};
+function createPhotoCropperEngine(parentId,key){
+ const parent=document.getElementById(parentId);if(!parent)return;
+ imgStates[key]={scale:1,rot:0,posX:0,posY:0,isDragging:false,startX:0,startY:0};
+ const wrapper=document.createElement('div');wrapper.className='photo-workspace-wrapper';
+ const inner=document.createElement('div');inner.className='photo-inner-canvas';
+ const fileWrapper=document.createElement('label');fileWrapper.className='file-input-wrapper';
+ fileWrapper.innerHTML='<div aria-hidden="true" style="font-size:30px">▧</div><p style="margin:0;font-size:13px;font-weight:500">Drag &amp; drop a “Show Your Work” image or click to browse</p><input type="file" accept="image/*,.heic,.heif" id="file-'+key+'">';
+ const stage=document.createElement('div');stage.className='cropper-stage';stage.id='stage-'+key;
+ const img=document.createElement('img');img.className='cropper-image';img.id='img-'+key;img.alt='Calculation work photo';stage.appendChild(img);
+ inner.append(fileWrapper,stage);wrapper.appendChild(inner);parent.appendChild(wrapper);
+ const controls=document.createElement('div');controls.className='crop-controls';
+ controls.innerHTML='<div class="control-row"><label for="zoom-'+key+'">Scale Zoom</label><input type="range" id="zoom-'+key+'" min="0.1" max="3" step="0.01" value="1"></div><div class="control-row"><label for="rotate-'+key+'">Rotation</label><input type="range" id="rotate-'+key+'" min="0" max="360" step="1" value="0"></div><button type="button" class="btn-remove-photo" id="remove-'+key+'">Remove Photo</button>';
+ parent.appendChild(controls);
+ const fileInput=document.getElementById('file-'+key),zoom=document.getElementById('zoom-'+key),rotate=document.getElementById('rotate-'+key);
+ fileInput.addEventListener('change',async()=>{
+  const file=fileInput.files&&fileInput.files[0];if(!file)return;
+  try{
+   let usable=file;
+   if(/\.(heic|heif)$/i.test(file.name)){
+    if(typeof heic2any!=='function')throw new Error('HEIC conversion library is unavailable');
+    let converted=await heic2any({blob:file,toType:'image/jpeg',quality:.9});if(Array.isArray(converted))converted=converted[0];
+    usable=new File([converted],file.name.replace(/\.(heic|heif)$/i,'.jpg'),{type:'image/jpeg'});
+   }
+   const url=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(usable)});
+   img.onload=()=>{fileWrapper.style.display='none';stage.style.display='block';controls.style.display='flex';
+    const s=imgStates[key];s.scale=Math.min(stage.clientWidth/img.naturalWidth,stage.clientHeight/img.naturalHeight);s.scale=Math.max(.1,Math.min(1,s.scale));s.rot=0;
+    s.posX=(stage.clientWidth-img.naturalWidth)/2;s.posY=(stage.clientHeight-img.naturalHeight)/2;
+    zoom.value=1;rotate.value=0;updateTransform(key);syncPhoto(key)};
+   img.src=url;
+  }catch(err){alert('Could not open this image. Please try a JPEG or PNG image, or retry the HEIC/HEIF file.');fileInput.value=''}
+ });
+ function startDrag(e){if(stage.style.display==='none')return;e.preventDefault();const s=imgStates[key];s.isDragging=true;const p=e.touches?e.touches[0]:e;s.startX=p.clientX-s.posX;s.startY=p.clientY-s.posY}
+ function moveDrag(e){const s=imgStates[key];if(!s.isDragging)return;const p=e.touches?e.touches[0]:e;s.posX=p.clientX-s.startX;s.posY=p.clientY-s.startY;updateTransform(key);syncPhoto(key)}
+ function endDrag(){imgStates[key].isDragging=false}
+ stage.addEventListener('mousedown',startDrag);stage.addEventListener('touchstart',startDrag,{passive:false});
+ window.addEventListener('mousemove',moveDrag);window.addEventListener('touchmove',moveDrag,{passive:false});
+ window.addEventListener('mouseup',endDrag);window.addEventListener('touchend',endDrag);
+ zoom.addEventListener('input',()=>{imgStates[key].scale=parseFloat(zoom.value);updateTransform(key);syncPhoto(key)});
+ rotate.addEventListener('input',()=>{imgStates[key].rot=parseInt(rotate.value,10);updateTransform(key);syncPhoto(key)});
+ document.getElementById('remove-'+key).addEventListener('click',()=>removePhoto(key));
+}
+function updateTransform(key){const img=document.getElementById('img-'+key),s=imgStates[key];if(img&&s)img.style.transform=`translate(${s.posX}px,${s.posY}px) scale(${s.scale}) rotate(${s.rot}deg)`}
+function syncPhoto(key){
+ const s=imgStates[key],stage=document.getElementById('stage-'+key),img=document.getElementById('img-'+key),dest=document.getElementById('sum-photo-'+key);
+ if(!s||!stage||!img||!dest||!img.naturalWidth||!stage.clientWidth)return;
+ const canvas=document.createElement('canvas');canvas.width=stage.clientWidth;canvas.height=stage.clientHeight;const ctx=canvas.getContext('2d');
+ ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.save();
+ ctx.translate(s.posX+img.naturalWidth/2,s.posY+img.naturalHeight/2);ctx.rotate(s.rot*Math.PI/180);ctx.scale(s.scale,s.scale);
+ ctx.drawImage(img,-img.naturalWidth/2,-img.naturalHeight/2);ctx.restore();
+ dest.innerHTML='';const preview=document.createElement('img');preview.className='summary-preview-img';preview.alt='Calculation work photo';preview.src=canvas.toDataURL('image/jpeg',.9);dest.appendChild(preview);
+}
+function removePhoto(key){
+ const file=document.getElementById('file-'+key),stage=document.getElementById('stage-'+key),img=document.getElementById('img-'+key),wrapper=stage.closest('.photo-workspace-wrapper'),fileWrap=wrapper.querySelector('.file-input-wrapper'),controls=wrapper.nextElementSibling;
+ file.value='';img.removeAttribute('src');img.style.transform='';stage.style.display='none';fileWrap.style.display='flex';controls.style.display='none';
+ document.getElementById('zoom-'+key).value=1;document.getElementById('rotate-'+key).value=0;document.getElementById('sum-photo-'+key).innerHTML='';
+ imgStates[key]={scale:1,rot:0,posX:0,posY:0,isDragging:false,startX:0,startY:0};
+}
+photoKeys.forEach(key=>createPhotoCropperEngine('cropperContainer-'+key,key));
+document.getElementById('printButton').addEventListener('click',()=>{
+ const name=document.getElementById('studentName').value.trim();
+ const boxes=answerIds.map(id=>document.getElementById('ans-'+id)).filter(Boolean);
+ const missing=boxes.some(b=>!b.textContent.trim());
+ if(!name||missing){document.getElementById('validationBanner').style.display='block';window.scrollTo({top:0,behavior:'smooth'});return}
+ document.getElementById('validationBanner').style.display='none';window.print();
+ setTimeout(()=>{document.getElementById('studentName').disabled=true;boxes.forEach(b=>b.contentEditable='false');document.querySelectorAll('.toolbar,.crop-controls,.file-input-wrapper').forEach(el=>el.style.display='none')},1000);
+});
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&['p','s'].includes(e.key.toLowerCase())){e.preventDefault()}});
+</script>
+</body>
+</html>
