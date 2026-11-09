@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assignment 9, CH144 Fall 2026</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f4f6f9;color:#333;line-height:1.6;margin:0;padding:20px}
+.container{max-width:900px;margin:0 auto;background:#fff;padding:40px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.05)}
+h1{text-align:center;color:#1e3a8a;margin:0 0 5px;font-size:28px}
+.max-points-container{display:flex;justify-content:center;margin:0 0 30px}
+.max-points-tally{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:8px 16px;border-radius:20px;font-size:14px;font-weight:700}
+.student-info-block{display:flex;gap:20px;background:#f8fafc;padding:20px;border-radius:6px;border:1px solid #e2e8f0;margin-bottom:30px}
+.info-group{flex:1;display:flex;flex-direction:column;gap:5px}
+.info-group label{font-weight:600;font-size:14px;color:#475569}
+.info-group input{padding:10px;border:1px solid #cbd5e1;border-radius:4px;font-size:15px}
+.question-block{margin-bottom:30px;padding-bottom:25px;border-bottom:1px solid #e2e8f0}
+.container>h1,.max-points-container,.question-block{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+.question-block .answer-box{-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text;user-select:text}
+.question-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.point-badge{background:#e0f2fe;color:#0369a1;font-weight:700;font-size:13px;padding:4px 10px;border-radius:4px;white-space:nowrap;border:1px solid #bae6fd}
+.question-text{font-weight:600;font-size:16px;color:#1e293b;line-height:1.5}.equation-line{display:block;margin:8px 0 10px;padding:8px 12px;background:#f8fafc;border-left:3px solid #94a3b8;font-weight:600;font-family:Cambria,Georgia,serif;white-space:normal;overflow-wrap:normal;break-inside:avoid}
+.sub-question-block{margin-top:15px;padding-left:15px;border-left:3px solid #cbd5e1;margin-bottom:15px}
+.toolbar{display:flex;gap:4px;background:#f1f5f9;padding:6px;border-radius:6px 6px 0 0;border:1px solid #cbd5e1;border-bottom:none;flex-wrap:wrap}
+.toolbar button{background:#fff;border:1px solid #cbd5e1;border-radius:4px;padding:4px 10px;font-size:13px;cursor:pointer;font-weight:500;color:#334155}
+.toolbar button:hover{background:#e2e8f0}
+.symbol-btn{font-family:Cambria,Georgia,serif;font-weight:bold}
+.answer-box{min-height:90px;border:1px solid #cbd5e1;border-radius:0 0 6px 6px;padding:12px;background:#fff;outline:none;font-size:15px;overflow-y:auto;margin-bottom:10px;user-select:text}
+.answer-box:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+.photo-workspace-wrapper{width:100%;position:relative;background:#0f172a;border-radius:8px;overflow:hidden;border:2px dashed #cbd5e1;padding-top:80%;margin:10px 0}
+.photo-inner-canvas{position:absolute;inset:0;display:flex;justify-content:center;align-items:center}
+.file-input-wrapper{position:absolute;z-index:10;text-align:center;color:#cbd5e1;cursor:pointer;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px}
+.file-input-wrapper input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.cropper-stage{display:none;width:100%;height:100%;position:relative;overflow:hidden;cursor:move;touch-action:none}
+.cropper-image{position:absolute;transform-origin:center center;max-width:none;max-height:none;user-select:none;pointer-events:none}
+.crop-controls{display:none;background:#1e293b;padding:15px;border-radius:0 0 8px 8px;color:white;gap:15px;flex-direction:column;margin-bottom:25px}
+.control-row{display:flex;align-items:center;gap:10px;font-size:13px}.control-row label{width:80px}.control-row input[type=range]{flex:1}
+.btn-remove-photo{background:#dc2626;color:#fff;border:0;padding:8px 16px;border-radius:4px;font-weight:600;cursor:pointer;align-self:flex-end}
+.summary-section{margin-top:20px;padding-top:30px;border-top:3px solid #1e3a8a}
+.summary-section h2{color:#1e3a8a;font-size:22px;margin-bottom:15px}
+.summary-table{width:100%;border-collapse:collapse;background:#fff;font-size:14px}
+.summary-table th,.summary-table td{border:1px solid #cbd5e1;padding:12px;text-align:left;vertical-align:top}
+.summary-table th{background:#f8fafc;color:#1e293b}.summary-table td p{margin:0;word-break:break-word;white-space:pre-wrap}
+.summary-preview-img{max-width:100%;max-height:300px;object-fit:contain;border:1px solid #e2e8f0;display:block;margin-top:10px}
+.btn-download-pdf{background:#1e3a8a;color:white;border:0;padding:12px 24px;border-radius:6px;font-size:16px;font-weight:600;cursor:pointer;margin-top:10px}
+.validation-alert{display:none;background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;padding:15px;border-radius:6px;margin-bottom:20px;font-weight:600;text-align:center}
+.action-warning{color:#dc2626;background:#fef2f2;border:1px dashed #fca5a5;padding:10px 20px;border-radius:6px;font-weight:600;font-size:14px;margin:20px auto 10px;display:inline-block;text-align:center}
+@media(max-width:600px){body{padding:8px}.container{padding:16px}.question-header{flex-direction:column}.student-info-block{padding:12px}}
+@media print{
+ @page{margin:.5in}
+ body{background:#fff;color:#000;padding:0;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .container{box-shadow:none;padding:0;max-width:100%;width:100%}
+ .toolbar,.crop-controls,.file-input-wrapper,.btn-download-pdf,.validation-alert,.action-warning{display:none!important}
+ .question-block,.sub-question-block,.summary-table tr,.student-info-block,.summary-section{break-inside:avoid}
+ .max-points-tally{background:none;border:1px solid #000;color:#000}
+ .photo-workspace-wrapper{background:#fff;border:1px solid #999}
+}
+
+.structure-choices{position:relative;width:min(100%,500px);aspect-ratio:1/1;margin:12px auto 18px;background:#fff;border:1px solid #e2e8f0}
+.structure-choices img{display:block;width:100%;height:100%;object-fit:contain}
+.structure-label{position:absolute;font-weight:700;font-size:15px;color:#1e293b;background:rgba(255,255,255,.92);padding:1px 5px;border-radius:3px}
+.structure-label.a{left:3%;top:3%}.structure-label.b{left:53%;top:3%}.structure-label.c{left:3%;top:53%}.structure-label.d{left:53%;top:53%}
+@media print{.structure-choices{break-inside:avoid;border:1px solid #ccc}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+</head>
+<body>
+<div class="container">
+<div id="validationBanner" class="validation-alert">⚠️ Please enter your Student Name and answer all text fields before converting to PDF.</div>
+<h1>Assignment 9 CH144 Fall 2026</h1>
+<div class="max-points-container"><div class="max-points-tally">📊 Maximum Points Available: 87 pts (points listed in assignment)</div></div>
+<div class="student-info-block"><div class="info-group"><label for="studentName">Student Full Name</label><input type="text" id="studentName" placeholder="Enter full name..." autocomplete="off"></div></div>
+<form id="assignmentForm" onsubmit="return false;"><div id="questionsContainer"></div></form>
+<div class="summary-section"><h2>Answers</h2><table class="summary-table"><thead><tr><th style="width:180px">Questions</th><th>Answers</th><th style="width:90px">Points</th></tr></thead><tbody id="summaryTableBody"></tbody></table></div>
+<div style="text-align:center"><div class="action-warning">⚠️ Once the print button is activated, editing will be disabled.</div><br><button type="button" class="btn-download-pdf" id="printButton">💾 Convert &amp; Download Document PDF</button></div>
+</div>
+<script>
+const questions = [
+  {
+    "n": 1,
+    "display": "1",
+    "pts": 2,
+    "title": "50 g Potassium aluminum sulfate, aka alum (KAl(SO₄)₂) is dissolved in 1 liter of water. Identify the solute and solvent.",
+    "parts": [
+      [
+        "",
+        "Identify the solute and solvent."
+      ]
+    ]
+  },
+  {
+    "n": 2,
+    "display": "2",
+    "pts": 1,
+    "title": "A solution of sodium phosphate is mixed with a solution of copper (II) nitrate. A blue substance settles out into the bottom of the beaker. What is the general name for the blue substance that comes out of solution?",
+    "parts": [
+      [
+        "",
+        "Answer"
+      ]
+    ]
+  },
+  {
+    "n": 3,
+    "display": "3",
+    "pts": 3,
+    "title": "45 g of calcium sulfate is dissolved in 850 ml of water. Show your work.",
+    "photo": true,
+    "parts": [
+      [
+        "A",
+        "(1 pt) Calculate the concentration of the solution in g/ml."
+      ],
+      [
+        "B",
+        "(1 pt) Calculate the number of moles of calcium sulfate."
+      ],
+      [
+        "C",
+        "(1 pt) Calculate the molarity of the solution."
+      ]
+    ]
+  },
+  {
+    "n": 4,
+    "display": "4",
+    "pts": 1,
+    "title": "Gold exists in seawater at 0.01 μg/m³. A bar of gold weighs 12.4 kg. Show your work.",
+    "photo": true,
+    "parts": [
+      [
+        "A",
+        "Calculate the volume of seawater needed to collect enough gold to make a gold bar."
+      ]
+    ]
+  },
+  {
+    "n": 5,
+    "display": "5",
+    "pts": 4,
+    "title": "16 g of ammonium chloride is dissolved in 375 ml of water. Show your work.",
+    "photo": true,
+    "parts": [
+      [
+        "A",
+        "Calculate the number of moles of ammonium chloride."
+      ],
+      [
+        "B",
+        "Calculate the molarity of the solution."
+      ],
+      [
+        "C",
+        "100 ml of the solution is transferred to an empty beaker. Calculate the number of moles of ammonium chloride in the new beaker."
+      ],
+      [
+        "D",
+        "Calculate the mass, in grams, of ammonium chloride that would be recovered from the new beaker if the water were removed."
+      ]
+    ]
+  },
+  {
+    "n": 6,
+    "display": "6",
+    "pts": 1,
+    "title": "225 ml of water is added to 500 ml of 1.2 M zinc (II) chloride. Calculate the new molarity of the solution after the water is added. Show your work.",
+    "photo": true,
+    "parts": [
+      [
+        "",
+        "Answer"
+      ]
+    ]
+  },
+  {
+    "n": 7,
+    "display": "7",
+    "pts": 4,
+    "title": "Methanol (CH₄O) has a density of 0.791 g/ml. 25 ml of methanol is added to 185 ml of water. Show your work.",
+    "photo": true,
+    "parts": [
+      [
+        "A",
+        "(3 pts) Calculate the molarity of the methanol solution."
+      ],
+      [
+        "B",
+        "(1 pt) 25 ml of the methanol solution is then diluted to 65 ml in another beaker. Calculate the molarity of the diluted solution."
+      ]
+    ]
+  },
+  {
+    "n": 8,
+    "display": "8",
+    "pts": 3,
+    "title": "A sample of brine contains 11.3% NaCl by mass. The brine is boiled to evaporate off the water. Show your work.",
+    "photo": true,
+    "parts": [
+      [
+        "A",
+        "Calculate the concentration of the solution if 45% of the water is evaporated off."
+      ],
+      [
+        "B",
+        "Suppose you take 1 liter of the new solution and evaporate it to complete dryness. Calculate the amount of NaCl that will be recovered in grams. The density of the evaporated solution is determined to be 1.194 g/ml."
+      ]
+    ]
+  },
+  {
+    "n": 9,
+    "display": "9",
+    "pts": 2,
+    "title": "A 2000 l tank of CaCl₂ solution has an unknown concentration. You take out exactly 500 ml and distill it to remove all the water. The residue in the flask weighs 57.6 g. Calculate the molarity of the solution in the tank.",
+    "parts": [
+      [
+        "",
+        "Answer"
+      ]
+    ]
+  },
+  {
+    "n": 10,
+    "display": "10",
+    "pts": 10,
+    "title": "Write out the balanced dissociation equation for each of the following ionic salts when the solid salt is dissolved in water. Be sure to include states of matter and charges on the ions.",
+    "parts": [
+      [
+        "A",
+        "Li₂SO₄"
+      ],
+      [
+        "B",
+        "Fe(NO₃)₃"
+      ],
+      [
+        "C",
+        "BaBr₂"
+      ],
+      [
+        "D",
+        "NaOH"
+      ],
+      [
+        "E",
+        "Mg₃(PO₄)₂"
+      ]
+    ]
+  },
+  {
+    "n": 11,
+    "display": "11",
+    "pts": 5,
+    "title": "For each of the compounds in the previous example, state the van’t Hoff factor for each. Show your work.",
+    "photo": true,
+    "parts": [
+      [
+        "A",
+        "Li₂SO₄"
+      ],
+      [
+        "B",
+        "Fe(NO₃)₃"
+      ],
+      [
+        "C",
+        "BaBr₂"
+      ],
+      [
+        "D",
+        "NaOH"
+      ],
+      [
+        "E",
+        "Mg₃(PO₄)₂"
+      ]
+    ]
+  },
+  {
+    "n": 12,
+    "display": "12",
+    "pts": 3,
+    "title": "0.4 g of NaCl is dissolved in 0.5 l of water. Kf = 1.86 °C/m, Kb = 0.515 °C/m. The freezing point of pure water is 0 °C and the boiling point of pure water is 100 °C. Show your work.",
+    "photo": true,
+    "parts": [
+      [
+        "A",
+        "(1 pt) Calculate the molality of the solution."
+      ],
+      [
+        "B",
+        "(1 pt) Calculate the new freezing point."
+      ],
+      [
+        "C",
+        "(1 pt) Calculate the new boiling point of water."
+      ]
+    ]
+  },
+  {
+    "n": 13,
+    "display": "13",
+    "pts": 3,
+    "title": "0.4 g of CaCl₂ is dissolved in 0.5 l of water. Kf = 1.86 °C/m, Kb = 0.515 °C/m. The freezing point of pure water is 0 °C and the boiling point of pure water is 100 °C. Show your work.",
+    "photo": true,
+    "parts": [
+      [
+        "A",
+        "(1 pt) Calculate the molality of the solution."
+      ],
+      [
+        "B",
+        "(1 pt) Calculate the new freezing point."
+      ],
+      [
+        "C",
+        "(1 pt) Calculate the new boiling point of water."
+      ]
+    ]
+  },
+  {
+    "n": 14,
+    "display": "14",
+    "pts": 2,
+    "title": "A 0.5 M solution of NH₄Cl and pure water are separated by a semipermeable membrane in a U-tube as shown in class lecture. The experiment is done at 25 °C (298.15 K). Calculate the osmotic pressure exerted by the NH₄Cl solution. Show your work.",
+    "photo": true,
+    "parts": [
+      [
+        "",
+        "Answer"
+      ]
+    ]
+  },
+  {
+    "n": 15,
+    "display": "15",
+    "pts": 18,
+    "title": "The following solutions are mixed together. IF a reaction forms a precipitate, write out the balanced reaction. Be sure to include states of matter. Show your work.",
+    "photo": true,
+    "parts": [
+      [
+        "A",
+        "NaOH and FeCl₃"
+      ],
+      [
+        "B",
+        "Co(NO₃)₂ and BaCl₂"
+      ],
+      [
+        "C",
+        "Na₃PO₄ and CuCl₂"
+      ],
+      [
+        "D",
+        "SnI₂ and Na₂SO₄"
+      ],
+      [
+        "E",
+        "AgF and (NH₄)₂CO₃"
+      ],
+      [
+        "F",
+        "Cu(NO₃)₃ + LiOH"
+      ]
+    ]
+  },
+  {
+    "n": 16,
+    "display": "16",
+    "pts": 12,
+    "title": "0.4 g of NH₄CO₃ is dissolved into 150 ml of water. 0.25 g of solid AlCl₃ is added to the solution. Given molar masses: NH₄CO₃ = 96.086 g/mol; AlCl₃ = 133.34 g/mol; precipitate = 233.99 g/mol. Show your work.",
+    "photo": true,
+    "parts": [
+      [
+        "A",
+        "(3 pts) Write out the balanced reaction for this reaction."
+      ],
+      [
+        "B",
+        "(1 pt) State the molecular formula of the precipitate that forms."
+      ],
+      [
+        "C",
+        "(4 pts) Calculate the amount of precipitate that forms from this reaction."
+      ],
+      [
+        "D",
+        "(4 pts) Calculate the amount of the non-limiting reagent that remains."
+      ]
+    ]
+  },
+  {
+    "n": 17,
+    "display": "17",
+    "pts": 14,
+    "title": "Consider a 1 liter, 1 M solution of Na₃PO₄. Show your work for all steps.",
+    "photo": true,
+    "parts": [
+      [
+        "A",
+        "(2 pts) Calculate the boiling point of the solution (Kb = 0.515 °C/m)."
+      ],
+      [
+        "B",
+        "(3 pts) 100 ml of 1 M Pb(NO₃)₂ is added to the original solution. Write out the balanced equation for the formation of precipitate."
+      ],
+      [
+        "C",
+        "(3 pts) Calculate the amount, in grams, of precipitate that forms."
+      ],
+      [
+        "D",
+        "(4 pts) Calculate the molarity of the Na₃PO₄ solution after the precipitation occurs. Hint: the volume is now 1100 ml."
+      ],
+      [
+        "E",
+        "(2 pts) The precipitate is filtered out and the Na₃PO₄ solution is collected. Calculate the new boiling point of the solution (Kb = 0.515 °C/m)."
+      ]
+    ]
+  }
+];
+const symbols=['→','⇌','°C','Δ','π','±','²','³','⁻','⁺','×','·','µ','⁻¹','⁻²','⁻³'];
+const answerIds=[];
+const photoKeys=[];
+const summaryBody=document.getElementById('summaryTableBody');
+const questionsContainer=document.getElementById('questionsContainer');
+document.addEventListener('copy',e=>{const sel=window.getSelection();const node=sel&&sel.anchorNode;const el=node&&(node.nodeType===1?node:node.parentElement);if(el&&el.closest('.container>h1,.max-points-container,.question-block')&&!el.closest('.answer-box'))e.preventDefault()});
+document.addEventListener('cut',e=>{const sel=window.getSelection();const node=sel&&sel.anchorNode;const el=node&&(node.nodeType===1?node:node.parentElement);if(el&&el.closest('.container>h1,.max-points-container,.question-block')&&!el.closest('.answer-box'))e.preventDefault()});
+function isAssignmentPromptTarget(target){
+ const el=target&&(target.nodeType===1?target:target.parentElement);
+ return !!(el&&el.closest('.container>h1,.max-points-container,.question-block')&&!el.closest('.answer-box'));
+}
+document.addEventListener('copy',e=>{if(isAssignmentPromptTarget(window.getSelection()?.anchorNode))e.preventDefault()});
+document.addEventListener('cut',e=>{if(isAssignmentPromptTarget(window.getSelection()?.anchorNode))e.preventDefault()});
+document.addEventListener('keydown',e=>{
+ if((e.ctrlKey||e.metaKey)&&['c','x'].includes(e.key.toLowerCase())&&!e.target.closest?.('.answer-box')){e.preventDefault();e.stopPropagation()}
+});
+document.addEventListener('dragstart',e=>{if(isAssignmentPromptTarget(e.target))e.preventDefault()});
+document.addEventListener('contextmenu',e=>{if(isAssignmentPromptTarget(e.target))e.preventDefault()});
+
+
+function makeToolbar(id){
+ const bar=document.createElement('div');bar.className='toolbar';bar.id='tb-'+id;
+ const sup=document.createElement('button');sup.type='button';sup.innerHTML='x<sup>2</sup>';sup.onclick=()=>formatText('superscript');bar.appendChild(sup);
+ const sub=document.createElement('button');sub.type='button';sub.innerHTML='x<sub>2</sub>';sub.onclick=()=>formatText('subscript');bar.appendChild(sub);
+ symbols.forEach(sym=>{const b=document.createElement('button');b.type='button';b.className='symbol-btn';b.textContent=sym;b.onclick=()=>insertSymbol(sym,id);bar.appendChild(b)});
+ return bar;
+}
+function formatText(command){document.execCommand(command,false,null)}
+function insertSymbol(symbol,id){
+ const box=document.getElementById('ans-'+id);box.focus();
+ const sel=window.getSelection();
+ if(sel&&sel.rangeCount){const range=sel.getRangeAt(0);if(box.contains(range.commonAncestorContainer)){range.deleteContents();const node=document.createTextNode(symbol);range.insertNode(node);range.setStartAfter(node);range.collapse(true);sel.removeAllRanges();sel.addRange(range)}else{box.appendChild(document.createTextNode(symbol))}}else{box.appendChild(document.createTextNode(symbol))}
+ box.dispatchEvent(new Event('input',{bubbles:true}));
+}
+function addStructureChoices(block,q){
+ if(!q.structureImage)return;
+ const wrap=document.createElement('div');wrap.className='structure-choices';wrap.setAttribute('role','group');wrap.setAttribute('aria-label','Chemical structure choices A through D');
+ const img=document.createElement('img');img.src=q.structureImage;img.alt='Four chemical structure choices arranged in a two-by-two grid';wrap.appendChild(img);
+ ['a','b','c','d'].forEach(letter=>{const label=document.createElement('span');label.className='structure-label '+letter;label.textContent=letter.toUpperCase();wrap.appendChild(label)});
+ block.appendChild(wrap);
+}
+
+questions.forEach(q=>{
+ const block=document.createElement('section');block.className='question-block';block.id='block-'+q.n;
+ const header=document.createElement('div');header.className='question-header';
+ const badge=document.createElement('span');badge.className='point-badge';badge.textContent=q.pts===null?'':q.pts+' pts';
+ const title=document.createElement('span');title.className='question-text';title.textContent=q.display+'. '+q.title;
+ header.append(badge,title);block.appendChild(header);
+ if(q.equation){const eq=document.createElement('div');eq.className='equation-line';eq.textContent=q.equation;block.appendChild(eq)}
+ if(q.structureImage&&!q.structureAfterParts)addStructureChoices(block,q);
+ const ids=[];
+ q.parts.forEach(([letter,text])=>{
+  const subblock=document.createElement('div');subblock.className='sub-question-block';
+  const prompt=document.createElement('div');prompt.className='question-text';prompt.style.cssText='font-size:15px;margin-bottom:8px;';
+  if(letter){const strong=document.createElement('strong');strong.textContent=letter+'. ';prompt.append(strong)}
+  prompt.append(document.createTextNode(text));subblock.appendChild(prompt);
+  const id=letter?`${q.n}${letter}`:`${q.n}`;ids.push(id);answerIds.push(id);
+  subblock.appendChild(makeToolbar(id));
+  const answer=document.createElement('div');answer.className='answer-box';answer.contentEditable='true';answer.id='ans-'+id;
+  answer.addEventListener('input',()=>{const dest=document.getElementById('sum-'+id);if(dest)dest.innerHTML=answer.innerHTML});
+  // Prevent pictures from being pasted or dropped into answer boxes while
+  // preserving ordinary text and any non-image text formatting.
+  answer.addEventListener('paste',e=>{
+   const data=e.clipboardData;
+   if(!data)return;
+   const hasImageFile=Array.from(data.items||[]).some(item=>item.kind==='file'&&item.type.startsWith('image/'));
+   const html=data.getData('text/html');
+   if(!hasImageFile&&!(html&&/<(?:img|picture|svg)\b/i.test(html)))return;
+   e.preventDefault();
+   if(html){
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    doc.querySelectorAll('img,picture,svg').forEach(el=>el.remove());
+    const clean=doc.body.innerHTML;
+    if(clean)document.execCommand('insertHTML',false,clean);
+    else{
+     const plain=data.getData('text/plain');
+     if(plain)document.execCommand('insertText',false,plain);
+    }
+   }else{
+    const plain=data.getData('text/plain');
+    if(plain)document.execCommand('insertText',false,plain);
+   }
+   answer.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  answer.addEventListener('dragover',e=>{
+   if(Array.from(e.dataTransfer?.items||[]).some(item=>item.kind==='file'&&item.type.startsWith('image/')))e.preventDefault();
+  });
+  answer.addEventListener('drop',e=>{
+   if(Array.from(e.dataTransfer?.items||[]).some(item=>item.kind==='file'&&item.type.startsWith('image/'))){
+    e.preventDefault();
+    e.stopPropagation();
+   }
+  });
+  new MutationObserver(()=>{const bad=answer.querySelectorAll('img,picture,svg,video,canvas,object,embed');if(bad.length){bad.forEach(el=>el.remove());answer.dispatchEvent(new Event('input',{bubbles:true}))}}).observe(answer,{childList:true,subtree:true});
+  answer.addEventListener('beforeinput',e=>{if(e.inputType==='insertFromDrop'&&Array.from(e.dataTransfer?.types||[]).some(t=>t==='Files'||t==='text/html'||t==='text/uri-list'))e.preventDefault()});
+  subblock.appendChild(answer);block.appendChild(subblock);
+ });
+ if(q.structureImage&&q.structureAfterParts)addStructureChoices(block,q);
+ if(q.photo){
+  photoKeys.push(String(q.n));
+  const note=document.createElement('div');note.className='question-text';note.style.marginTop='12px';note.textContent='Optional photo of work (one photo box for this question):';block.appendChild(note);
+  const holder=document.createElement('div');holder.id='cropperContainer-'+q.n;block.appendChild(holder);
+ }
+ questionsContainer.appendChild(block);
+ const row=document.createElement('tr');const qcell=document.createElement('td');qcell.style.fontWeight='600';qcell.textContent='Question '+q.display+(q.pts===null?'':' ('+q.pts+' pts)');
+ const acell=document.createElement('td');
+ ids.forEach(id=>{const wrap=document.createElement('div');wrap.style.marginBottom='8px';const dest=document.createElement('span');dest.id='sum-'+id;{const label=document.createElement('strong');const partText=(q.parts.find(part=>(part[0]?`${q.n}${part[0]}`:`${q.n}`)===id)||[])[1]||'';const pointMatch=partText.match(/\((\d+)\s*pts?\)/i);label.textContent=(ids.length>1?'Sub-question '+id.slice(String(q.n).length):'Answer')+(pointMatch?' ('+pointMatch[1]+' pts)':(ids.length===1?' ('+q.pts+' pts)':''))+': ';wrap.appendChild(label)}wrap.appendChild(dest);acell.appendChild(wrap)});
+ if(q.photo){const photoDest=document.createElement('div');photoDest.id='sum-photo-'+q.n;acell.appendChild(photoDest)}
+ const ptscell=document.createElement('td');ptscell.textContent=q.pts===null?'Not specified':q.pts+' pts';row.append(qcell,acell,ptscell);summaryBody.appendChild(row);
+});
+
+const imgStates={};
+function createPhotoCropperEngine(parentId,key){
+ const parent=document.getElementById(parentId);if(!parent)return;
+ imgStates[key]={scale:1,rot:0,posX:0,posY:0,isDragging:false,startX:0,startY:0};
+ const wrapper=document.createElement('div');wrapper.className='photo-workspace-wrapper';
+ const inner=document.createElement('div');inner.className='photo-inner-canvas';
+ const fileWrapper=document.createElement('label');fileWrapper.className='file-input-wrapper';
+ fileWrapper.innerHTML='<div aria-hidden="true" style="font-size:30px">▧</div><p style="margin:0;font-size:13px;font-weight:500">Drag &amp; drop a “Show Your Work” image or click to browse</p><input type="file" accept="image/*,.heic,.heif" id="file-'+key+'">';
+ const stage=document.createElement('div');stage.className='cropper-stage';stage.id='stage-'+key;
+ const img=document.createElement('img');img.className='cropper-image';img.id='img-'+key;img.alt='Calculation work photo';stage.appendChild(img);
+ inner.append(fileWrapper,stage);wrapper.appendChild(inner);parent.appendChild(wrapper);
+ const controls=document.createElement('div');controls.className='crop-controls';
+ controls.innerHTML='<div class="control-row"><label for="zoom-'+key+'">Scale Zoom</label><input type="range" id="zoom-'+key+'" min="0.1" max="3" step="0.01" value="1"></div><div class="control-row"><label for="rotate-'+key+'">Rotation</label><input type="range" id="rotate-'+key+'" min="0" max="360" step="1" value="0"></div><button type="button" class="btn-remove-photo" id="remove-'+key+'">Remove Photo</button>';
+ parent.appendChild(controls);
+ const fileInput=document.getElementById('file-'+key),zoom=document.getElementById('zoom-'+key),rotate=document.getElementById('rotate-'+key);
+ fileInput.addEventListener('change',async()=>{
+  const file=fileInput.files&&fileInput.files[0];if(!file)return;
+  try{
+   let usable=file;
+   if(/\.(heic|heif)$/i.test(file.name)){
+    if(typeof heic2any!=='function')throw new Error('HEIC conversion library is unavailable');
+    let converted=await heic2any({blob:file,toType:'image/jpeg',quality:.9});if(Array.isArray(converted))converted=converted[0];
+    usable=new File([converted],file.name.replace(/\.(heic|heif)$/i,'.jpg'),{type:'image/jpeg'});
+   }
+   const url=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(usable)});
+   img.onload=()=>{fileWrapper.style.display='none';stage.style.display='block';controls.style.display='flex';
+    const s=imgStates[key];s.scale=Math.min(stage.clientWidth/img.naturalWidth,stage.clientHeight/img.naturalHeight);s.scale=Math.max(.1,Math.min(1,s.scale));s.rot=0;
+    s.posX=(stage.clientWidth-img.naturalWidth)/2;s.posY=(stage.clientHeight-img.naturalHeight)/2;
+    zoom.value=1;rotate.value=0;updateTransform(key);syncPhoto(key)};
+   img.src=url;
+  }catch(err){alert('Could not open this image. Please try a JPEG or PNG image, or retry the HEIC/HEIF file.');fileInput.value=''}
+ });
+ function startDrag(e){if(stage.style.display==='none')return;e.preventDefault();const s=imgStates[key];s.isDragging=true;const p=e.touches?e.touches[0]:e;s.startX=p.clientX-s.posX;s.startY=p.clientY-s.posY}
+ function moveDrag(e){const s=imgStates[key];if(!s.isDragging)return;const p=e.touches?e.touches[0]:e;s.posX=p.clientX-s.startX;s.posY=p.clientY-s.startY;updateTransform(key);syncPhoto(key)}
+ function endDrag(){imgStates[key].isDragging=false}
+ stage.addEventListener('mousedown',startDrag);stage.addEventListener('touchstart',startDrag,{passive:false});
+ window.addEventListener('mousemove',moveDrag);window.addEventListener('touchmove',moveDrag,{passive:false});
+ window.addEventListener('mouseup',endDrag);window.addEventListener('touchend',endDrag);
+ zoom.addEventListener('input',()=>{imgStates[key].scale=parseFloat(zoom.value);updateTransform(key);syncPhoto(key)});
+ rotate.addEventListener('input',()=>{imgStates[key].rot=parseInt(rotate.value,10);updateTransform(key);syncPhoto(key)});
+ document.getElementById('remove-'+key).addEventListener('click',()=>removePhoto(key));
+}
+function updateTransform(key){const img=document.getElementById('img-'+key),s=imgStates[key];if(img&&s)img.style.transform=`translate(${s.posX}px,${s.posY}px) scale(${s.scale}) rotate(${s.rot}deg)`}
+function syncPhoto(key){
+ const s=imgStates[key],stage=document.getElementById('stage-'+key),img=document.getElementById('img-'+key),dest=document.getElementById('sum-photo-'+key);
+ if(!s||!stage||!img||!dest||!img.naturalWidth||!stage.clientWidth)return;
+ const canvas=document.createElement('canvas');canvas.width=stage.clientWidth;canvas.height=stage.clientHeight;const ctx=canvas.getContext('2d');
+ ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.save();
+ ctx.translate(s.posX+img.naturalWidth/2,s.posY+img.naturalHeight/2);ctx.rotate(s.rot*Math.PI/180);ctx.scale(s.scale,s.scale);
+ ctx.drawImage(img,-img.naturalWidth/2,-img.naturalHeight/2);ctx.restore();
+ dest.innerHTML='';const preview=document.createElement('img');preview.className='summary-preview-img';preview.alt='Calculation work photo';preview.src=canvas.toDataURL('image/jpeg',.9);dest.appendChild(preview);
+}
+function removePhoto(key){
+ const file=document.getElementById('file-'+key),stage=document.getElementById('stage-'+key),img=document.getElementById('img-'+key),wrapper=stage.closest('.photo-workspace-wrapper'),fileWrap=wrapper.querySelector('.file-input-wrapper'),controls=wrapper.nextElementSibling;
+ file.value='';img.removeAttribute('src');img.style.transform='';stage.style.display='none';fileWrap.style.display='flex';controls.style.display='none';
+ document.getElementById('zoom-'+key).value=1;document.getElementById('rotate-'+key).value=0;document.getElementById('sum-photo-'+key).innerHTML='';
+ imgStates[key]={scale:1,rot:0,posX:0,posY:0,isDragging:false,startX:0,startY:0};
+}
+photoKeys.forEach(key=>createPhotoCropperEngine('cropperContainer-'+key,key));
+document.getElementById('printButton').addEventListener('click',()=>{
+ const name=document.getElementById('studentName').value.trim();
+ const boxes=answerIds.map(id=>document.getElementById('ans-'+id)).filter(Boolean);
+ const missing=boxes.some(b=>!b.textContent.trim());
+ if(!name||missing){document.getElementById('validationBanner').style.display='block';window.scrollTo({top:0,behavior:'smooth'});return}
+ document.getElementById('validationBanner').style.display='none';window.print();
+ setTimeout(()=>{document.getElementById('studentName').disabled=true;boxes.forEach(b=>b.contentEditable='false');document.querySelectorAll('.toolbar,.crop-controls,.file-input-wrapper').forEach(el=>el.style.display='none')},1000);
+});
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&['p','s'].includes(e.key.toLowerCase())){e.preventDefault()}});
+</script>
+</body>
+</html>
